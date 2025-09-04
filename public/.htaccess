@@ -1,0 +1,25 @@
+# public/.htaccess
+# Purpose: Laravel front controller, asset passthrough.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Let existing files (CSS, JS, images, etc.) through
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Let existing directories through
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Send everything else to index.php
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Security: block sensitive files in public/
+<Files .env>
+    Require all denied
+</Files>
+<FilesMatch "(artisan|server\.php|\.htaccess)">
+    Require all denied
+</FilesMatch>

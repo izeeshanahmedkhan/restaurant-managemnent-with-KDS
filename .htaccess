@@ -1,0 +1,37 @@
+# Root .htaccess
+# Purpose: Forward all traffic into /public and handle /assets/* cleanly.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If request is for /assets, map to /public/assets
+    RewriteCond %{REQUEST_URI} ^/assets/ [NC]
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+    # Skip if already under /public
+    RewriteCond %{REQUEST_URI} ^/public/ [NC]
+    RewriteRule ^ - [L]
+
+    # Let existing files and dirs in root pass through
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Forward everything else into /public
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Basic security
+<Files .env>
+    Require all denied
+</Files>
+<FilesMatch "(composer\.(json|lock)|package\.json|webpack\.mix\.js|vite\.config\.(js|ts))">
+    Require all denied
+</FilesMatch>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php83” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php83 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
