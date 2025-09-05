@@ -68,7 +68,8 @@ class KDSController extends Controller
     {
         $request->validate([
             'status' => 'nullable|string|in:pending,confirmed,processing,cooking,done',
-            'search' => 'nullable|string|max:255'
+            'search' => 'nullable|string|max:255',
+            'item_id' => 'nullable|integer|exists:products,id'
         ]);
         
         $user = Auth::guard('branch')->user();
@@ -81,6 +82,7 @@ class KDSController extends Controller
         $branchId = $user->id;
         $status = $request->get('status');
         $search = $request->get('search');
+        $itemId = $request->get('item_id');
         
         // Validate branch access - branch users can only access their own branch
         if (!$user || $user->id !== $branchId) {
@@ -111,6 +113,13 @@ class KDSController extends Controller
             });
         }
         
+        // Filter by specific item/product
+        if ($itemId) {
+            $query->whereHas('details', function($detailQuery) use ($itemId) {
+                $detailQuery->where('product_id', $itemId);
+            });
+        }
+        
         // Auto-hide done orders older than 2 hours (from when they were marked done)
         $query->where(function($q) {
             $q->where('order_status', '!=', 'done')
@@ -125,8 +134,9 @@ class KDSController extends Controller
                 'id' => $order->id,
                 'order_number' => '#' . str_pad($order->id, 7, '0', STR_PAD_LEFT),
                 'token_number' => $order->token ?? 'N/A',
-                'status' => $order->order_status,
+                'status' => strtoupper($order->order_status),
                 'created_at' => $order->created_at->format('h:i A, d-m-Y'),
+                'placed_at' => $order->created_at->toISOString(),
                 'customer_name' => $order->customer ? $order->customer->f_name . ' ' . $order->customer->l_name : 'Guest',
                 'items' => $order->details->map(function($detail) {
                     $variations = $detail->variation ?? [];
@@ -189,6 +199,7 @@ class KDSController extends Controller
                     }
                     
                     return [
+                        'product_id' => $detail->product_id,
                         'name' => $detail->product->name ?? 'Unknown Item',
                         'quantity' => $detail->quantity,
                         'variations' => $variations,
@@ -200,7 +211,8 @@ class KDSController extends Controller
                     ];
                 }),
                 'total_amount' => $order->order_amount,
-                'order_note' => $order->order_note
+                'order_note' => $order->order_note,
+                'order_type' => $order->order_type ?? 'dine_in'
             ];
         });
         
@@ -304,7 +316,7 @@ class KDSController extends Controller
             return [
                 'id' => $order->id,
                 'order_number' => '#' . str_pad($order->id, 7, '0', STR_PAD_LEFT),
-                'status' => $order->order_status,
+                'status' => strtoupper($order->order_status),
                 'customer_name' => $order->customer ? $order->customer->f_name . ' ' . $order->customer->l_name : 'Guest',
                 'created_at' => $order->created_at->format('h:i A, d-m-Y')
             ];
@@ -368,7 +380,7 @@ class KDSController extends Controller
     }
 
     /**
-     * Get items board data for today's orders
+     * Get items board data for active orders (pending and cooking only)
      */
     public function getItemsBoard(Request $request)
     {
@@ -386,10 +398,10 @@ class KDSController extends Controller
         $branchId = $user->id;
         $range = $request->get('range', 'today');
 
-        // Get orders for the specified range
+        // Get orders for the specified range (excluding done orders)
         $query = Order::with(['details.product'])
             ->where('branch_id', $branchId)
-            ->whereIn('order_status', ['pending', 'confirmed', 'processing', 'cooking', 'done']);
+            ->whereIn('order_status', ['pending', 'confirmed', 'processing', 'cooking']);
 
         if ($range === 'today') {
             $query->whereDate('created_at', Carbon::today());

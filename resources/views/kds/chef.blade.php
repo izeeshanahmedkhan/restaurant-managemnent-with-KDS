@@ -58,15 +58,15 @@
                 <div class="kds-sidebar__logo">
                     <i class="fas fa-utensils"></i>
                 </div>
-                <h1 class="kds-sidebar__title">Items Board</h1>
+                <h1 class="kds-sidebar__title">Active Dishes</h1>
             </div>
             
             <!-- Items Board Section -->
             <div class="kds-sidebar__section">
                 <div class="kds-sidebar__section-header">
                     <h3 class="kds-sidebar__section-title">
-                        <i class="fas fa-list"></i>
-                        Today's Items
+                        <i class="fas fa-fire"></i>
+                        Pending & Cooking
                     </h3>
                     <button class="kds-sidebar__toggle" id="items-toggle">
                         <i class="fas fa-chevron-down"></i>
@@ -75,7 +75,7 @@
                 <div class="kds-sidebar__items-list" id="items-board-list">
                     <div class="kds-sidebar__loading">
                         <i class="fas fa-spinner fa-spin"></i>
-                        Loading items...
+                        Loading active dishes...
                     </div>
                 </div>
             </div>
@@ -94,6 +94,11 @@
             </div>
             
             <div class="kds-header__controls">
+                <!-- Fullscreen Button -->
+                <button class="kds-fullscreen-btn" id="fullscreen-btn" title="Toggle Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                
                 <div class="kds-header__search">
                     <i class="fas fa-search kds-header__search-icon"></i>
                     <input type="text" 
@@ -154,6 +159,10 @@
                             New Orders
                             <span class="kds-col__count" id="col-new-count">0</span>
                         </h2>
+                        <button class="kds-col__sort-btn" data-column="new" title="Toggle sort order">
+                            <i class="fas fa-sort-amount-down"></i>
+                            Latest
+                        </button>
                     </div>
                     <div class="kds-list" id="new-orders-list">
                         @foreach($newOrders as $order)
@@ -177,6 +186,10 @@
                             Cooking
                             <span class="kds-col__count" id="col-cooking-count">0</span>
                         </h2>
+                        <button class="kds-col__sort-btn" data-column="cooking" title="Toggle sort order">
+                            <i class="fas fa-sort-amount-down"></i>
+                            Latest
+                        </button>
                     </div>
                     <div class="kds-list" id="cooking-orders-list">
                         @foreach($cookingOrders as $order)
@@ -200,6 +213,10 @@
                             Done
                             <span class="kds-col__count" id="col-done-count">0</span>
                         </h2>
+                        <button class="kds-col__sort-btn" data-column="done" title="Toggle sort order">
+                            <i class="fas fa-sort-amount-down"></i>
+                            Latest
+                        </button>
                     </div>
                     <div class="kds-list" id="done-orders-list">
                         @foreach($doneOrders as $order)
@@ -216,6 +233,41 @@
                 </div>
             </section>
         </main>
+    </div>
+    
+    <!-- Order Details Modal -->
+    <div id="order-modal" class="kds-modal">
+        <div class="kds-modal__overlay"></div>
+        <div class="kds-modal__content">
+            <div class="kds-modal__header">
+                <h2 class="kds-modal__title">Order Details</h2>
+                <button class="kds-modal__close" id="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="kds-modal__body" id="modal-body">
+                <!-- Order details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Dish Modal -->
+    <div id="dish-modal" class="kds-dish-modal">
+        <div class="kds-dish-modal__overlay" id="dish-modal-close"></div>
+        <div class="kds-dish-modal__content">
+            <div class="kds-dish-modal__header">
+                <h2 class="kds-dish-modal__title">
+                    <i class="fas fa-utensils"></i>
+                    Dish Details
+                </h2>
+                <button class="kds-dish-modal__close" id="dish-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="kds-dish-modal__body" id="dish-modal-body">
+                <!-- Dish details will be populated here -->
+            </div>
+        </div>
     </div>
     
     <!-- Empty State Styles -->

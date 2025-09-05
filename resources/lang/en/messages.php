@@ -2818,4 +2818,5 @@
   'Sub Category removed!' => 'Sub Category removed!',
   'Kitchen Display System' => 'Kitchen Display System',
   'Kitchen Display' => 'Kitchen Display',
+  'Email : newb@gmail.com' => 'Email : newb@gmail.com',
 );

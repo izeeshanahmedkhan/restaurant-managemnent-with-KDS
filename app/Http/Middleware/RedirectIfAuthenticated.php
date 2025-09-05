@@ -29,6 +29,11 @@ class RedirectIfAuthenticated
                     return redirect()->route('branch.dashboard');
                 }
                 break;
+            case 'chef':
+                if (Auth::guard($guard)->check()) {
+                    return redirect()->route('chef.dashboard');
+                }
+                break;
             default:
                 if (Auth::guard($guard)->check()) {
                     return response()->json([],404);

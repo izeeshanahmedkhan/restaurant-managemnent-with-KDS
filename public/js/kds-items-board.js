@@ -8,7 +8,7 @@
 
     // Configuration
     const CONFIG = {
-        pollingInterval: 15000, // 15 seconds
+        pollingInterval: 4000, // 4 seconds - same as orders
         apiEndpoints: {
             itemsBoard: '/admin/kds/items-board',
             orders: '/admin/kds/orders'
@@ -108,17 +108,17 @@
         const $container = $('#items-board-list');
         
         if (!items || !Array.isArray(items) || items.length === 0) {
-            $container.html('<div class="kds-sidebar__loading">No items found</div>');
+            $container.html('<div class="kds-sidebar__loading">No active dishes</div>');
             return;
         }
 
         let html = '';
         
-        // Add "All Items" option
+        // Add "All Active Dishes" option
         html += `
             <div class="kds-sidebar__item-board ${currentFilter === null ? 'active' : ''}" data-item-id="all">
                 <div class="kds-sidebar__item-board-header">
-                    <div class="kds-sidebar__item-board-name">All Items</div>
+                    <div class="kds-sidebar__item-board-name">All Active Dishes</div>
                     <div class="kds-sidebar__item-board-count">${items.length}</div>
                 </div>
             </div>
@@ -178,9 +178,16 @@
      */
     function setupEventHandlers() {
         // Item click handler
-        $(document).on('click', '.kds-sidebar__item-board', function() {
+        $(document).on('click', '.kds-sidebar__item-board', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             const itemId = $(this).data('item-id');
-            filterOrdersByItem(itemId);
+            if (itemId && itemId !== 'all') {
+                showDishModal(itemId);
+            } else if (itemId === 'all') {
+                filterOrdersByItem(itemId);
+            }
         });
         
         // Branch selector change
@@ -198,6 +205,9 @@
             $icon.toggleClass('fa-chevron-down fa-chevron-up');
             $(this).toggleClass('collapsed');
         });
+
+        // Dish modal event handlers
+        setupDishModalHandlers();
     }
 
     /**
@@ -263,6 +273,230 @@
         currentFilter = null;
         $('.kds-sidebar__item-board').removeClass('active');
         $('.kds-sidebar__item-board[data-item-id="all"]').addClass('active');
+    }
+
+    /**
+     * Setup dish modal event handlers
+     */
+    function setupDishModalHandlers() {
+        // Close modal handlers
+        $(document).on('click', '#dish-modal-close, .kds-dish-modal__overlay', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideDishModal();
+        });
+
+        // Close on escape key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && $('#dish-modal').hasClass('show')) {
+                hideDishModal();
+            }
+        });
+
+        // Prevent modal content clicks from closing modal
+        $(document).on('click', '.kds-dish-modal__content', function(e) {
+            e.stopPropagation();
+        });
+    }
+
+    /**
+     * Show dish modal with details
+     */
+    function showDishModal(dishId) {
+        const dish = itemsData.find(item => item.id == dishId);
+        if (!dish) {
+            console.error('Dish not found:', dishId);
+            return;
+        }
+
+        // Get all orders containing this dish
+        const branchId = $('#branch-selector').val();
+        if (!branchId) {
+            console.error('No branch selected');
+            return;
+        }
+
+        // Fetch orders containing this dish
+        $.ajax({
+            url: CONFIG.apiEndpoints.orders,
+            method: 'GET',
+            data: {
+                branch_id: branchId,
+                item_id: dishId
+            },
+            dataType: 'json',
+            timeout: 10000
+        })
+        .done(function(response) {
+            if (response && response.orders) {
+                renderDishModal(dish, response.orders);
+                
+                // Check if we're in fullscreen mode
+                const isFullscreen = $('.kds-container').hasClass('fullscreen');
+                
+                // Move modal outside fullscreen container if in fullscreen mode
+                if (isFullscreen) {
+                    $('#dish-modal').detach().appendTo('body');
+                    console.log('KDS: Moved dish modal outside fullscreen container');
+                }
+                
+                $('#dish-modal').addClass('show');
+                
+                if (isFullscreen) {
+                    $('#dish-modal').css({
+                        'display': 'flex !important',
+                        'opacity': '1 !important',
+                        'visibility': 'visible !important',
+                        'z-index': '999999 !important',
+                        'position': 'fixed !important',
+                        'top': '0 !important',
+                        'left': '0 !important',
+                        'width': '100vw !important',
+                        'height': '100vh !important'
+                    });
+                }
+                
+                $('body').addClass('modal-open');
+            } else {
+                console.error('Invalid response format:', response);
+                showError('Failed to load dish details - Invalid response format');
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('Failed to fetch dish details:', status, error);
+            showError('Failed to load dish details');
+        });
+    }
+
+    /**
+     * Hide dish modal
+     */
+    function hideDishModal() {
+        $('#dish-modal').removeClass('show');
+        
+        // Reset any forced styles in fullscreen mode
+        const isFullscreen = $('.kds-container').hasClass('fullscreen');
+        if (isFullscreen) {
+            $('#dish-modal').css({
+                'display': '',
+                'opacity': '',
+                'visibility': '',
+                'z-index': '',
+                'position': '',
+                'top': '',
+                'left': '',
+                'width': '',
+                'height': ''
+            });
+            
+            // Move modal back to its original position
+            $('#dish-modal').detach().appendTo('.kds-container');
+            console.log('KDS: Moved dish modal back to container');
+        }
+        
+        $('body').removeClass('modal-open');
+    }
+
+    /**
+     * Render dish modal content
+     */
+    function renderDishModal(dish, orders) {
+        const $modal = $('#dish-modal');
+        const $body = $('#dish-modal-body');
+        
+        // Ensure orders is an array
+        if (!Array.isArray(orders)) {
+            console.error('Orders is not an array:', orders);
+            $body.html('<p>Error: Invalid data format</p>');
+            return;
+        }
+        
+        // Calculate total quantity
+        let totalQuantity = 0;
+        orders.forEach(order => {
+            if (order.items && Array.isArray(order.items)) {
+                order.items.forEach(item => {
+                    if (item.product_id == dish.id) {
+                        totalQuantity += item.quantity || 0;
+                    }
+                });
+            }
+        });
+
+        let html = `
+            <div class="kds-dish-modal__dish-info">
+                <h3 class="kds-dish-modal__dish-name">${dish.name}</h3>
+                <p class="kds-dish-modal__dish-total">Total Quantity: ${totalQuantity}</p>
+            </div>
+            
+            <div class="kds-dish-modal__orders">
+                <h4 class="kds-dish-modal__orders-title">Orders with this dish (${orders.length})</h4>
+        `;
+
+        if (orders.length === 0) {
+            html += '<p>No orders found for this dish.</p>';
+        } else {
+            orders.forEach(order => {
+                const orderItems = (order.items || []).filter(item => item.product_id == dish.id);
+                
+                html += `
+                    <div class="kds-dish-modal__order">
+                        <div class="kds-dish-modal__order-header">
+                            <h5 class="kds-dish-modal__order-number">#${String(order.id).padStart(7, '0')}</h5>
+                            <span class="kds-dish-modal__order-status kds-dish-modal__order-status--${order.status.toLowerCase()}">
+                                ${order.status}
+                            </span>
+                        </div>
+                        
+                        <div class="kds-dish-modal__order-details">
+                `;
+
+                orderItems.forEach(item => {
+                    // Use the pre-formatted text from backend
+                    const variationText = item.variation_text || '';
+                    const addonText = item.addon_text || '';
+
+                    html += `
+                        <div class="kds-dish-modal__order-item">
+                            <div class="kds-dish-modal__order-item-info">
+                                <div class="kds-dish-modal__order-item-name">${item.name || 'Unknown Item'}</div>
+                                ${variationText ? `<div class="kds-dish-modal__order-item-variations">${variationText}</div>` : ''}
+                                ${addonText ? `<div class="kds-dish-modal__order-item-addons">Add-ons: ${addonText}</div>` : ''}
+                            </div>
+                            <div class="kds-dish-modal__order-item-quantity">${item.quantity}</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                        
+                        <div class="kds-dish-modal__order-meta">
+                            <div class="kds-dish-modal__order-customer">
+                                <i class="fas fa-user"></i>
+                                ${order.customer_name || (order.order_type === 'delivery' ? 'Delivery' : 'Walk-in')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        html += '</div>';
+        $body.html(html);
+    }
+
+    /**
+     * Show error message
+     */
+    function showError(message) {
+        const $container = $('#items-board-list');
+        $container.html(`
+            <div class="kds-sidebar__loading" style="color: #ef4444;">
+                <i class="fas fa-exclamation-triangle"></i>
+                ${message}
+            </div>
+        `);
     }
 
     // Public API

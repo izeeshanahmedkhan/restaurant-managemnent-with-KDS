@@ -47,12 +47,20 @@
     let soundContext = null;
     let currentFilter = null; // Current item filter
     let itemsData = []; // Cached items data
+    let sortOrder = {
+        new: 'latest', // latest or oldest
+        cooking: 'latest',
+        done: 'latest'
+    };
 
     // Initialize KDS
     $(document).ready(function() {
         initializeKDS();
         startPolling();
         attachEventHandlers();
+        setupModalEventHandlers();
+        setupFullscreenHandlers();
+        setupSortHandlers();
         updateClock();
         setInterval(updateClock, 1000);
         loadItemsSummary();
@@ -150,14 +158,23 @@
                 existingCard.replaceWith($card);
                 updatedOrderCount++;
             } else {
-                // Add new card
-                $column.prepend($card);
+                // Add new card to the list container, not the column
+                const $listContainer = $column.find('.kds-list');
+                if ($listContainer.length) {
+                    $listContainer.append($card);
+                } else {
+                    // Fallback: append to column if list container not found
+                    $column.append($card);
+                }
                 newOrderCount++;
             }
 
             // Remove from other columns if moved
             removeFromOtherColumns(order.id, columnSelector);
         });
+
+        // Sort all columns after rendering
+        sortAllColumns();
 
         // Update statistics
         updateStatistics();
@@ -217,7 +234,7 @@
         const timeAgo = getTimeAgo(order.created_at || order.placed_at);
 
         return $(`
-            <div class="kds-card" data-order-id="${order.id}">
+            <div class="kds-card kds-card--clickable" data-order-id="${order.id}" data-order-data='${JSON.stringify(order)}'>
                 <div class="kds-card__header">
                     <h3 class="kds-card__number">${order.order_number || '#' + order.id}</h3>
                     <div class="kds-card__status">
@@ -466,6 +483,22 @@
     }
 
     /**
+     * Update column counts
+     */
+    function updateColumnCounts() {
+        const columns = [
+            { id: 'col-new', selector: '#new-orders-list' },
+            { id: 'col-cooking', selector: '#cooking-orders-list' },
+            { id: 'col-done', selector: '#done-orders-list' }
+        ];
+        
+        columns.forEach(function(column) {
+            const count = $(column.selector).find('.kds-card').length;
+            $(`#${column.id}-count`).text(count);
+        });
+    }
+
+    /**
      * Update order status
      */
     function updateOrderStatus(orderId, newStatus) {
@@ -489,8 +522,23 @@
         })
         .done(function(response) {
             if (response.ok) {
-                // Refresh data
-                fetchUpdates();
+                // Immediately remove the card from current column
+                const $card = $(`.kds-card[data-order-id="${orderId}"]`);
+                if ($card.length) {
+                    $card.fadeOut(300, function() {
+                        $(this).remove();
+                        // Update the column count after removal
+                        updateColumnCounts();
+                    });
+                }
+                
+                // Update statistics immediately
+                updateStatistics();
+                
+                // Refresh data after a short delay to ensure smooth transition
+                setTimeout(() => {
+                    fetchUpdates();
+                }, 500);
             } else {
                 throw new Error(response.message || 'Update failed');
             }
@@ -653,7 +701,7 @@
         
         // Ensure items is an array
         if (!items || !Array.isArray(items) || items.length === 0) {
-            $itemsList.html('<div class="kds-sidebar__loading">No items ordered today</div>');
+            $itemsList.html('<div class="kds-sidebar__loading">No active dishes</div>');
             return;
         }
 
@@ -756,6 +804,446 @@
         }
     });
 
+    /**
+     * Show order details modal
+     */
+    function showOrderModal(orderData) {
+        console.log('KDS: showOrderModal called with:', orderData);
+        
+        const $modal = $('#order-modal');
+        const $modalBody = $('#modal-body');
+        
+        console.log('KDS: Modal element found:', $modal.length > 0);
+        console.log('KDS: Modal body found:', $modalBody.length > 0);
+        
+        if (!$modal.length) {
+            console.error('KDS Modal: Modal element not found');
+            return;
+        }
+        
+        if (!orderData) {
+            console.error('KDS Modal: No order data provided');
+            return;
+        }
+        
+        try {
+            // Format order data for modal display
+            const modalHtml = renderOrderModal(orderData);
+            console.log('KDS: Modal HTML generated:', modalHtml);
+            $modalBody.html(modalHtml);
+            
+            // Check if we're in fullscreen mode
+            const isFullscreen = $('.kds-container').hasClass('fullscreen');
+            console.log('KDS: Fullscreen mode:', isFullscreen);
+            
+            // Move modal outside fullscreen container if in fullscreen mode
+            if (isFullscreen) {
+                $modal.detach().appendTo('body');
+                console.log('KDS: Moved modal outside fullscreen container');
+            }
+            
+            // Show modal
+            console.log('KDS: Adding show class to modal');
+            $modal.addClass('show');
+            
+            // Force display in fullscreen mode
+            if (isFullscreen) {
+                $modal.css({
+                    'display': 'flex !important',
+                    'opacity': '1 !important',
+                    'visibility': 'visible !important',
+                    'z-index': '999999 !important',
+                    'position': 'fixed !important',
+                    'top': '0 !important',
+                    'left': '0 !important',
+                    'width': '100vw !important',
+                    'height': '100vh !important'
+                });
+            }
+            
+            // Focus on modal for accessibility
+            $modal.find('.kds-modal__close').focus();
+            
+            // Prevent body scroll
+            $('body').addClass('modal-open');
+            
+            console.log('KDS: Modal should now be visible');
+        } catch (error) {
+            console.error('KDS Modal: Error showing modal:', error);
+            showError('Error displaying order details');
+        }
+    }
+    
+    /**
+     * Hide order details modal
+     */
+    function hideOrderModal() {
+        const $modal = $('#order-modal');
+        
+        if (!$modal.length) {
+            console.error('KDS Modal: Modal element not found');
+            return;
+        }
+        
+        try {
+            $modal.removeClass('show');
+            
+            // Reset any forced styles in fullscreen mode
+            const isFullscreen = $('.kds-container').hasClass('fullscreen');
+            if (isFullscreen) {
+                $modal.css({
+                    'display': '',
+                    'opacity': '',
+                    'visibility': '',
+                    'z-index': '',
+                    'position': '',
+                    'top': '',
+                    'left': '',
+                    'width': '',
+                    'height': ''
+                });
+                
+                // Move modal back to its original position
+                $modal.detach().appendTo('.kds-container');
+                console.log('KDS: Moved modal back to container');
+            }
+            
+            // Restore body scroll
+            $('body').removeClass('modal-open');
+        } catch (error) {
+            console.error('KDS Modal: Error hiding modal:', error);
+        }
+    }
+    
+    /**
+     * Render order modal content
+     */
+    function renderOrderModal(order) {
+        const statusClass = getStatusClass(order.status);
+        const statusText = getStatusText(order.status);
+        const timeAgo = getTimeAgo(order.placed_at || order.created_at);
+        const itemsHtml = renderModalOrderItems(order.items || []);
+        const actionButton = getModalActionButton(order);
+        
+        return `
+            <div class="kds-modal-order">
+                <div class="kds-modal-order__header">
+                    <h3 class="kds-modal-order__number">#${order.number || order.id}</h3>
+                    <span class="kds-modal-order__status kds-modal-order__status--${statusClass}">${statusText}</span>
+                </div>
+                
+                <div class="kds-modal-order__meta">
+                    <div class="kds-modal-order__meta-item">
+                        <div class="kds-modal-order__meta-label">Order Time</div>
+                        <div class="kds-modal-order__meta-value">${timeAgo}</div>
+                    </div>
+                    ${order.customer_name ? `
+                        <div class="kds-modal-order__meta-item">
+                            <div class="kds-modal-order__meta-label">Customer</div>
+                            <div class="kds-modal-order__meta-value">${order.customer_name}</div>
+                        </div>
+                    ` : ''}
+                    ${order.token ? `
+                        <div class="kds-modal-order__meta-item">
+                            <div class="kds-modal-order__meta-label">Token</div>
+                            <div class="kds-modal-order__meta-value">${order.token}</div>
+                        </div>
+                    ` : ''}
+                    ${order.total_amount ? `
+                        <div class="kds-modal-order__meta-item">
+                            <div class="kds-modal-order__meta-label">Total Amount</div>
+                            <div class="kds-modal-order__meta-value">$${order.total_amount}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="kds-modal-order__items">
+                    <div class="kds-modal-order__items-header">
+                        <i class="fas fa-list"></i>
+                        Order Items
+                    </div>
+                    ${itemsHtml}
+                </div>
+                
+                ${actionButton ? `
+                    <div class="kds-modal-order__actions">
+                        ${actionButton}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
+    /**
+     * Render order items for modal
+     */
+    function renderModalOrderItems(items) {
+        if (!items || items.length === 0) {
+            return '<div class="kds-modal-order__item"><div class="kds-modal-order__item-details">No items</div></div>';
+        }
+        
+        return items.map(function(item) {
+            const quantity = item.quantity || 1;
+            const variationsText = item.variation_text || '';
+            const addonsText = item.addon_text || '';
+            
+            return `
+                <div class="kds-modal-order__item">
+                    <div class="kds-modal-order__item-quantity">${quantity}x</div>
+                    <div class="kds-modal-order__item-details">
+                        <div class="kds-modal-order__item-name">${item.name}</div>
+                        ${variationsText ? `<div class="kds-modal-order__item-variations">${variationsText}</div>` : ''}
+                        ${addonsText ? `<div class="kds-modal-order__item-addons">+ ${addonsText}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    /**
+     * Get action button for modal
+     */
+    function getModalActionButton(order) {
+        const upperStatus = order.status ? order.status.toUpperCase() : '';
+        switch (upperStatus) {
+            case 'NEW':
+            case 'PENDING':
+            case 'CONFIRMED':
+            case 'PROCESSING':
+                return `
+                    <button class="kds-modal-order__btn kds-modal-order__btn--primary btn-modal-mark-processing" 
+                            data-id="${order.id}"
+                            aria-label="Mark order ${order.number || order.id} as processing">
+                        <i class="fas fa-play"></i>
+                        Mark Processing
+                    </button>
+                `;
+            case 'COOKING':
+                return `
+                    <button class="kds-modal-order__btn kds-modal-order__btn--success btn-modal-mark-done" 
+                            data-id="${order.id}"
+                            aria-label="Mark order ${order.number || order.id} as done">
+                        <i class="fas fa-check"></i>
+                        Mark Done
+                    </button>
+                `;
+            case 'DONE':
+            case 'COMPLETED':
+                return `
+                    <button class="kds-modal-order__btn kds-modal-order__btn--warn btn-modal-reopen" 
+                            data-id="${order.id}"
+                            aria-label="Reopen order ${order.number || order.id}">
+                        <i class="fas fa-undo"></i>
+                        Reopen
+                    </button>
+                `;
+            default:
+                return '';
+        }
+    }
+    
+    /**
+     * Setup sort event handlers
+     */
+    function setupSortHandlers() {
+        $(document).on('click', '.kds-col__sort-btn', function() {
+            const column = $(this).data('column');
+            const $button = $(this);
+            const $icon = $button.find('i');
+            const $text = $button.contents().filter(function() {
+                return this.nodeType === 3; // Text node
+            });
+            
+            // Toggle sort order
+            if (sortOrder[column] === 'latest') {
+                sortOrder[column] = 'oldest';
+                $button.addClass('oldest-first');
+                $text[0].textContent = ' Oldest';
+            } else {
+                sortOrder[column] = 'latest';
+                $button.removeClass('oldest-first');
+                $text[0].textContent = ' Latest';
+            }
+            
+            // Sort the column
+            sortColumn(column);
+        });
+    }
+    
+    /**
+     * Sort a specific column
+     */
+    function sortColumn(column) {
+        const columnSelector = getColumnSelector(column);
+        const $column = $(columnSelector);
+        const $list = $column.find('.kds-list');
+        const $cards = $list.find('.kds-card');
+        
+        if ($cards.length === 0) return;
+        
+        // Convert to array for sorting
+        const cardsArray = $cards.toArray();
+        
+        // Sort by creation time
+        cardsArray.sort(function(a, b) {
+            const timeA = new Date($(a).data('order-data').created_at || $(a).data('order-data').placed_at);
+            const timeB = new Date($(b).data('order-data').created_at || $(b).data('order-data').placed_at);
+            
+            if (sortOrder[column] === 'latest') {
+                return timeB - timeA; // Latest first
+            } else {
+                return timeA - timeB; // Oldest first
+            }
+        });
+        
+        // Re-append sorted cards
+        $list.empty();
+        cardsArray.forEach(function(card) {
+            $list.append(card);
+        });
+    }
+    
+    /**
+     * Sort all columns
+     */
+    function sortAllColumns() {
+        Object.keys(sortOrder).forEach(function(column) {
+            sortColumn(column);
+        });
+    }
+
+    /**
+     * Setup modal event handlers
+     */
+    function setupModalEventHandlers() {
+        // Order card click handler
+        $(document).on('click', '.kds-card--clickable', function(e) {
+            console.log('KDS: Card clicked', e.target);
+            
+            // Don't trigger if clicking on action buttons
+            if ($(e.target).closest('.kds-card__actions').length) {
+                console.log('KDS: Clicked on action button, ignoring');
+                return;
+            }
+            
+            const orderData = $(this).data('order-data');
+            console.log('KDS: Order data:', orderData);
+            
+            if (orderData) {
+                console.log('KDS: Showing modal');
+                showOrderModal(orderData);
+            } else {
+                console.error('KDS: No order data found');
+            }
+        });
+        
+        // Modal close handlers
+        $(document).on('click', '#modal-close, .kds-modal__overlay', function() {
+            hideOrderModal();
+        });
+        
+        // Modal action button handlers
+        $(document).on('click', '.btn-modal-mark-processing', function() {
+            const orderId = $(this).data('id');
+            updateOrderStatus(orderId, 'COOKING');
+            hideOrderModal();
+        });
+        
+        $(document).on('click', '.btn-modal-mark-done', function() {
+            const orderId = $(this).data('id');
+            updateOrderStatus(orderId, 'DONE');
+            hideOrderModal();
+        });
+        
+        $(document).on('click', '.btn-modal-reopen', function() {
+            const orderId = $(this).data('id');
+            updateOrderStatus(orderId, 'COOKING');
+            hideOrderModal();
+        });
+        
+        // ESC key to close modal
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && $('#order-modal').hasClass('show')) {
+                hideOrderModal();
+            }
+        });
+    }
+
+    // Fullscreen functionality
+    function setupFullscreenHandlers() {
+        const fullscreenBtn = $('#fullscreen-btn');
+        const container = $('.kds-container');
+        
+        if (fullscreenBtn.length === 0) return;
+        
+        fullscreenBtn.on('click', function() {
+            if (container.hasClass('fullscreen')) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+        });
+        
+        // Listen for fullscreen change events
+        $(document).on('fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange', function() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && !document.msFullscreenElement) {
+                container.removeClass('fullscreen');
+                updateFullscreenIcon(false);
+            }
+        });
+    }
+    
+    function enterFullscreen() {
+        const container = $('.kds-container')[0];
+        const fullscreenBtn = $('#fullscreen-btn');
+        
+        if (container.requestFullscreen) {
+            container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+            container.webkitRequestFullscreen();
+        } else if (container.mozRequestFullScreen) {
+            container.mozRequestFullScreen();
+        } else if (container.msRequestFullscreen) {
+            container.msRequestFullscreen();
+        } else {
+            // Fallback: Use CSS fullscreen
+            $('.kds-container').addClass('fullscreen');
+        }
+        
+        updateFullscreenIcon(true);
+    }
+    
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        } else {
+            // Fallback: Remove CSS fullscreen
+            $('.kds-container').removeClass('fullscreen');
+        }
+        
+        updateFullscreenIcon(false);
+    }
+    
+    function updateFullscreenIcon(isFullscreen) {
+        const fullscreenBtn = $('#fullscreen-btn i');
+        if (isFullscreen) {
+            fullscreenBtn.removeClass('fa-expand').addClass('fa-compress');
+            $('.kds-container').addClass('fullscreen');
+            $('body').addClass('fullscreen');
+        } else {
+            fullscreenBtn.removeClass('fa-compress').addClass('fa-expand');
+            $('.kds-container').removeClass('fullscreen');
+            $('body').removeClass('fullscreen');
+        }
+    }
+
     // Expose public API
     window.KDS = {
         fetchUpdates: fetchUpdates,
@@ -764,7 +1252,13 @@
         showToaster: showToaster,
         showError: showError,
         loadItemsSummary: loadItemsSummary,
-        clearItemFilter: clearItemFilter
+        clearItemFilter: clearItemFilter,
+        showOrderModal: showOrderModal,
+        hideOrderModal: hideOrderModal,
+        enterFullscreen: enterFullscreen,
+        exitFullscreen: exitFullscreen,
+        sortColumn: sortColumn,
+        sortAllColumns: sortAllColumns
     };
 
 })(jQuery);

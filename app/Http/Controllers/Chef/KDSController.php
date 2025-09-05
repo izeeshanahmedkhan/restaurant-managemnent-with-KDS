@@ -60,7 +60,8 @@ class KDSController extends Controller
     {
         $request->validate([
             'since' => 'nullable|date',
-            'search' => 'nullable|string|max:255'
+            'search' => 'nullable|string|max:255',
+            'item_id' => 'nullable|integer|exists:products,id'
         ]);
         
         $chef = Auth::guard('chef')->user();
@@ -87,6 +88,7 @@ class KDSController extends Controller
         }
         $since = $request->get('since');
         $search = $request->get('search');
+        $itemId = $request->get('item_id');
 
 
         // Validate branch access
@@ -124,6 +126,13 @@ class KDSController extends Controller
                   ->orWhereHas('details.product', function($productQuery) use ($search) {
                       $productQuery->where('name', 'like', "%{$search}%");
                   });
+            });
+        }
+        
+        // Filter by specific item/product
+        if ($itemId) {
+            $query->whereHas('details', function($detailQuery) use ($itemId) {
+                $detailQuery->where('product_id', $itemId);
             });
         }
 
@@ -203,6 +212,7 @@ class KDSController extends Controller
                     }
                     
                     return [
+                        'product_id' => $detail->product_id,
                         'name' => $detail->product->name ?? 'Unknown Item',
                         'quantity' => $detail->quantity,
                         'variations' => $variations,
@@ -216,7 +226,8 @@ class KDSController extends Controller
                 'token' => $order->token,
                 'customer_name' => $order->customer ? $order->customer->f_name . ' ' . $order->customer->l_name : null,
                 'total_amount' => $order->order_amount,
-                'order_note' => $order->order_note
+                'order_note' => $order->order_note,
+                'order_type' => $order->order_type ?? 'dine_in'
             ];
         });
 
@@ -403,7 +414,7 @@ class KDSController extends Controller
     }
 
     /**
-     * Get items board data for today's orders
+     * Get items board data for active orders (pending and cooking only)
      */
     public function getItemsBoard(Request $request)
     {
@@ -436,10 +447,10 @@ class KDSController extends Controller
         
         $range = $request->get('range', 'today');
 
-        // Get orders for the specified range
+        // Get orders for the specified range (excluding done orders)
         $query = Order::with(['details.product'])
             ->where('branch_id', $branchId)
-            ->whereIn('order_status', ['pending', 'confirmed', 'processing', 'cooking', 'done']);
+            ->whereIn('order_status', ['pending', 'confirmed', 'processing', 'cooking']);
 
         if ($range === 'today') {
             $query->whereDate('created_at', Carbon::today());

@@ -20,7 +20,7 @@
     $orderItems = $order->details ?? collect();
 @endphp
 
-<div class="kds-card" data-order-id="{{ $order->id }}">
+<div class="kds-card kds-card--clickable" data-order-id="{{ $order->id }}" data-order-data="{{ json_encode($order) }}">
     <div class="kds-card__header">
         <h3 class="kds-card__number">#{{ $order->id }}</h3>
         <div class="kds-card__status">
