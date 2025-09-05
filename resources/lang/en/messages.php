@@ -2816,4 +2816,6 @@
   'not_available' => 'Not available',
   'Role updated successfully!' => 'Role updated successfully!',
   'Sub Category removed!' => 'Sub Category removed!',
+  'Kitchen Display System' => 'Kitchen Display System',
+  'Kitchen Display' => 'Kitchen Display',
 );

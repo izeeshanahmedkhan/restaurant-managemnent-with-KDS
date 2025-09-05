@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Model\AddOn;
 use App\Model\Admin;
 use App\Model\Branch;
+use App\Model\BusinessSetting;
 use App\Model\Category;
 use App\Model\CustomerAddress;
 use App\Model\DeliveryMan;
@@ -38,6 +39,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use function App\CentralLogics\translate;
 
 class POSController extends Controller
@@ -53,7 +55,8 @@ class POSController extends Controller
         private Order           $order,
         private OrderDetail     $order_detail,
         private Notification    $notification,
-        private DeliveryMan     $delivery_man
+        private DeliveryMan     $delivery_man,
+        private BusinessSetting $business_setting
     ){}
 
     /**
@@ -68,7 +71,7 @@ class POSController extends Controller
         session()->put('branch_id', $selected_branch);
 
         $category = $request->query('category_id', 0);
-        $categories = $this->category->where(['position' => 0])->active()->get();
+        $categories = $this->category->where(['parent_id' => 0])->active()->get();
         $keyword = $request->keyword;
         $key = explode(' ', $keyword);
 
@@ -473,7 +476,7 @@ class POSController extends Controller
         $order->user_id = session()->get('customer_id') ?? null;
         $order->coupon_discount_title = $request->coupon_discount_title == 0 ? null : 'coupon_discount_title';
         $order->payment_status = ($order_type == 'take_away') ? 'paid' : (($order_type == 'dine_in' && $request->type != 'pay_after_eating') ? 'paid' : 'unpaid');
-        $order->order_status = $order_type == 'take_away' ? 'delivered' : 'confirmed' ;
+        $order->order_status = 'confirmed' ; // All orders start as confirmed for KDS
         $order->order_type = ($order_type == 'take_away') ? 'pos' : (($order_type == 'dine_in') ? 'dine_in' : (($order_type == 'home_delivery') ? 'delivery' : null));
         $order->coupon_code = $request->coupon_code ?? null;
         $order->payment_method = $request->type;
@@ -683,7 +686,7 @@ class POSController extends Controller
                             Mail::to($customer->email)->send(new \App\Mail\OrderPlaced($order_id));
                         }
                     }catch (\Exception $e) {
-                        //dd($e);
+                        Log::error('Email sending failed', ['error' => $e->getMessage()]);
                     }
                 }
 
@@ -1093,6 +1096,31 @@ class POSController extends Controller
     {
         session()->put('order_type', $request['order_type']);
         return response()->json($request['order_type'], 200);
+    }
+
+    /**
+     * Get distance between two points
+     */
+    public function get_distance(Request $request)
+    {
+        $request->validate([
+            'origin_lat' => 'required|numeric',
+            'origin_lng' => 'required|numeric',
+            'destination_lat' => 'required|numeric',
+            'destination_lng' => 'required|numeric'
+        ]);
+
+        $origin_lat = $request->origin_lat;
+        $origin_lng = $request->origin_lng;
+        $destination_lat = $request->destination_lat;
+        $destination_lng = $request->destination_lng;
+
+        $data = $this->getDistance($origin_lat, $origin_lng, $destination_lat, $destination_lng);
+
+        return response()->json([
+            'distance' => $data[0]['distanceMeters'] ?? 0,
+            'distance_km' => isset($data[0]['distanceMeters']) ? $data[0]['distanceMeters'] / 1000 : 0
+        ]);
     }
 
 }

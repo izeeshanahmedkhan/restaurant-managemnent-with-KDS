@@ -8,6 +8,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderDetail extends Model
 {
+    protected $fillable = [
+        'product_id',
+        'order_id',
+        'price',
+        'product_details',
+        'variation',
+        'add_on_ids',
+        'discount_on_product',
+        'discount_type',
+        'quantity',
+        'variant',
+        'add_on_qtys',
+        'add_on_taxes',
+        'add_on_prices',
+        'add_on_tax_amount',
+        'tax_amount'
+    ];
+
     protected $casts = [
         'product_id' => 'integer',
         'order_id' => 'integer',

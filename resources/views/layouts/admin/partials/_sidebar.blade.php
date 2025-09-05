@@ -232,6 +232,19 @@
                                     </li>
                                 </ul>
                             </li>
+
+                            <!-- KDS (Kitchen Display System) -->
+                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/kds/*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link"
+                                   href="{{route('admin.kds.dashboard')}}" title="{{translate('Kitchen Display System')}}">
+                                    <i class="tio-monitor nav-icon"></i>
+                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
+                                        {{translate('Kitchen Display')}}
+                                    </span>
+                                </a>
+                            </li>
+                            <!-- End KDS -->
+
                             <!-- End Pages -->
                         @endif
 

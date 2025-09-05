@@ -87,6 +87,18 @@
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
+                        <!-- KDS (Kitchen Display System) -->
+                        <li class="navbar-vertical-aside-has-menu {{Request::is('branch/kds/*')?'active':''}}">
+                            <a class="js-navbar-vertical-aside-menu-link nav-link"
+                               href="{{route('branch.kds.dashboard')}}" title="{{translate('Kitchen Display System')}}">
+                                <i class="tio-monitor nav-icon"></i>
+                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
+                                    {{translate('Kitchen Display')}}
+                                </span>
+                            </a>
+                        </li>
+                        <!-- End KDS -->
+
                         <li class="navbar-vertical-aside-has-menu {{Request::is('branch/verify-offline-payment*') ?'show active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('branch.verify-offline-payment', ['pending'])}}" title="{{translate('Verify_Offline_Payment')}}">

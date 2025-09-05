@@ -10,6 +10,7 @@ use App\Http\Middleware\AppActivation;
 use App\Http\Middleware\BranchAdder;
 use App\Http\Middleware\BranchMiddleware;
 use App\Http\Middleware\BranchStatusCheck;
+use App\Http\Middleware\ChefMiddleware;
 use App\Http\Middleware\ModulePermissionMiddleware;
 use App\Http\Middleware\MaintenanceModeMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -75,6 +76,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin'=>AdminMiddleware::class,
         'branch'=>BranchMiddleware::class,
+        'chef'=>ChefMiddleware::class,
         'actch' => ActivationCheckMiddleware::class,
         'localization' => \App\Http\Middleware\localization::class,
         'module' => ModulePermissionMiddleware::class,

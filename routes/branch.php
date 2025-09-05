@@ -12,14 +12,17 @@ use App\Http\Controllers\Branch\ProductController;
 use App\Http\Controllers\Branch\SystemController;
 use App\Http\Controllers\Branch\TableController;
 use App\Http\Controllers\Branch\TableOrderController;
+use App\Http\Controllers\Branch\KDSController;
 
 Route::group(['namespace' => 'Branch', 'as' => 'branch.', 'middleware' => 'maintenance_mode'], function () {
-    Route::group(['namespace' => 'Auth', 'prefix' => 'auth', 'as' => 'auth.'], function () {
+    Route::group(['namespace' => 'Auth', 'prefix' => 'auth', 'as' => 'auth.', 'middleware' => 'guest:branch'], function () {
         Route::get('/code/captcha/{tmp}', [LoginController::class, 'captcha'])->name('default-captcha');
         Route::get('login', [LoginController::class, 'login'])->name('login');
         Route::post('login', [LoginController::class, 'submit']);
-        Route::get('logout', [LoginController::class, 'logout'])->name('logout');
     });
+    
+    // Logout route (only accessible when logged in)
+    Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout')->middleware('branch');
 
     Route::group(['middleware' => ['branch', 'branch_status']], function () {
         Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
@@ -131,6 +134,16 @@ Route::group(['namespace' => 'Branch', 'as' => 'branch.', 'middleware' => 'maint
 
         Route::get('verify-offline-payment/quick-view-details', [OrderController::class, 'offlineViewDetails'])->name('offline-modal-view');
         Route::get('verify-offline-payment/{status}', [OrderController::class, 'offlineOrderList'])->name('verify-offline-payment');
+
+        // KDS (Kitchen Display System) Routes
+        Route::group(['prefix' => 'kds', 'as' => 'kds.'], function () {
+            Route::get('dashboard', [KDSController::class, 'dashboard'])->name('dashboard');
+            Route::get('orders', [KDSController::class, 'getOrders'])->name('orders');
+            Route::put('orders/{id}/status', [KDSController::class, 'updateStatus'])->name('update-status');
+            Route::get('search', [KDSController::class, 'searchOrders'])->name('search');
+            Route::get('items-summary', [KDSController::class, 'getItemsSummary'])->name('items-summary');
+            Route::get('items-board', [KDSController::class, 'getItemsBoard'])->name('items-board');
+        });
 
     });
 });

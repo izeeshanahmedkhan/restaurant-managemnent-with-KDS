@@ -56,6 +56,11 @@ return [
             'provider' => 'branches',
         ],
 
+        'chef' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
         'api' => [
             'driver' => 'passport',
             'provider' => 'users',

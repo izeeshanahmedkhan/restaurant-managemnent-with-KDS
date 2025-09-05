@@ -99,7 +99,7 @@ class OrderLogic
             $order_transaction->original_delivery_charge = $order->delivery_charge;
             $order_transaction->tax = $order->total_tax_amount;
             $order_transaction->received_by = $received_by?$received_by:'admin';
-            //dd($order_transaction);
+            // Debug: Order transaction created successfully
             $order_transaction->save();
 
             //if($order->user_id) CustomerLogic::create_loyalty_point_transaction($order->user_id, $order->id, $order->order_amount, 'order_place');

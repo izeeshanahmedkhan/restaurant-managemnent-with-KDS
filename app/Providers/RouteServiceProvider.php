@@ -44,11 +44,13 @@ class RouteServiceProvider extends ServiceProvider
     {
 //        $this->mapApiV1Routes();
 
-//        $this->mapWebRoutes();
+        $this->mapWebRoutes();
 
         $this->mapAdminRoutes();
 
-//        $this->mapBranchRoutes();
+        $this->mapBranchRoutes();
+
+        $this->mapChefRoutes();
 
         //$this->mapUpdateRoutes();
     }
@@ -82,6 +84,14 @@ class RouteServiceProvider extends ServiceProvider
             ->middleware('web')
             ->namespace($this->namespace)
             ->group(base_path('routes/branch.php'));
+    }
+
+    protected function mapChefRoutes()
+    {
+        Route::prefix('chef')
+            ->middleware('web')
+            ->namespace($this->namespace . '\Chef')
+            ->group(base_path('routes/chef.php'));
     }
 
     /**

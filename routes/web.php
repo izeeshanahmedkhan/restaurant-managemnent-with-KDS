@@ -21,11 +21,9 @@ use Illuminate\Support\Facades\View;
 use Mpdf\Mpdf;
 
 /**
- * Admin login
+ * Homepage with login options
  */
-Route::get('/', function () {
-    return redirect(\route('admin.dashboard'));
-});
+Route::get('/', [HomeController::class, 'homepage'])->name('homepage');
 
 Route::get('/image-proxy', function () {
     $url = request('url');

@@ -31,14 +31,14 @@ class CategoryController extends Controller
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
 
-            $categories = $this->category->where('position', 0)->where(function ($q) use ($key) {
+            $categories = $this->category->where('parent_id', 0)->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('name', 'like', "%{$value}%");
                 }
             });
             $queryParam = ['search' => $request['search']];
         } else {
-            $categories = $this->category->where('position', 0);
+            $categories = $this->category->where('parent_id', 0);
         }
 
         $categories = $categories->orderBY('priority', 'ASC')->paginate(Helpers::getPagination())->appends($queryParam);
@@ -59,7 +59,7 @@ class CategoryController extends Controller
             ->when($request['search'], function ($query) use ($search) {
                 $query->orWhere('name', 'like', "%{$search}%");
             })
-            ->where(['position' => 1])
+            ->where('parent_id', '>', 0)
             ->latest()
             ->paginate(Helpers::getPagination())
             ->appends($queryParam);

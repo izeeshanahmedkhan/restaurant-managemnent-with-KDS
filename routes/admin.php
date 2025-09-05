@@ -39,16 +39,19 @@ use App\Http\Controllers\Admin\TimeScheduleController;
 use App\Http\Controllers\Admin\WalletBonusController;
 use App\Http\Controllers\Admin\LoginSetupController;
 use App\Http\Controllers\Admin\DeliveryChargeSetupController;
+use App\Http\Controllers\Admin\KDSController;
 
 Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
     Route::get('lang/{locale}', [LanguageController::class, 'lang'])->name('lang');
 
-    Route::group(['namespace' => 'Auth', 'prefix' => 'auth', 'as' => 'auth.'], function () {
+    Route::group(['namespace' => 'Auth', 'prefix' => 'auth', 'as' => 'auth.', 'middleware' => 'guest:admin'], function () {
         Route::get('/code/captcha/{tmp}', [LoginController::class, 'captcha'])->name('default-captcha');
         Route::get('login', [LoginController::class, 'login'])->name('login');
         Route::post('login', [LoginController::class, 'submit'])->middleware('actch');
-        Route::get('logout', [LoginController::class, 'logout'])->name('logout');
     });
+    
+    // Logout route (only accessible when logged in)
+    Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout')->middleware('admin');
 
     Route::group(['middleware' => ['admin']], function () {
         Route::get('/fcm/{id}', [DashboardController::class, 'fcm'])->name('dashboard');     //test route
@@ -233,7 +236,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('store', [CategoryController::class, 'store'])->name('store');
             Route::get('edit/{id}', [CategoryController::class, 'edit'])->name('edit');
             Route::post('update/{id}', [CategoryController::class, 'update'])->name('update');
-            Route::post('store', [CategoryController::class, 'store'])->name('store');
             Route::get('status/{id}/{status}', [CategoryController::class, 'status'])->name('status');
             Route::delete('delete/{id}', [CategoryController::class, 'delete'])->name('delete');
             Route::post('search', [CategoryController::class, 'search'])->name('search');
@@ -515,6 +517,16 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('update/{id}', [KitchenController::class, 'update']);
             Route::delete('delete/{id}', [KitchenController::class, 'delete'])->name('delete');
             Route::get('status/{id}/{status}', [KitchenController::class, 'status'])->name('status');
+        });
+
+        // KDS (Kitchen Display System) Routes
+        Route::group(['prefix' => 'kds', 'as' => 'kds.', 'middleware' => ['module:order_management']], function () {
+            Route::get('dashboard', [KDSController::class, 'dashboard'])->name('dashboard');
+            Route::get('orders', [KDSController::class, 'getOrders'])->name('orders');
+            Route::put('orders/{id}/status', [KDSController::class, 'updateStatus'])->name('update-status');
+            Route::get('search', [KDSController::class, 'searchOrders'])->name('search');
+            Route::get('items-summary', [KDSController::class, 'getItemsSummary'])->name('items-summary');
+            Route::get('items-board', [KDSController::class, 'getItemsBoard'])->name('items-board');
         });
 
         Route::group(['prefix' => 'table', 'as' => 'table.', 'middleware' => ['module:table_management', 'app_activate:' . APPS['table_app']['software_id']]], function () {

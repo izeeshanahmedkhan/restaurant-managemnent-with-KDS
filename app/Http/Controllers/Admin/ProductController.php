@@ -97,7 +97,7 @@ class ProductController extends Controller
      */
     public function index(): Renderable
     {
-        $categories = $this->category->where(['position' => 0])->get();
+        $categories = $this->category->where(['parent_id' => 0])->get();
         $cuisines = $this->cuisine::active()->orderBy('priority', 'ASC')->get();
         return view('admin-views.product.index', compact('categories', 'cuisines'));
     }

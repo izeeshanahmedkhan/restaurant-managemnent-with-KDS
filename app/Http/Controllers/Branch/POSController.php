@@ -51,7 +51,7 @@ class POSController extends Controller
     public function index(Request $request): Renderable
     {
         $category = $request->query('category_id', 0);
-        $categories = $this->category->where(['position' => 0])->active()->get();
+        $categories = $this->category->where(['parent_id' => 0])->active()->get();
         $keyword = $request->keyword;
         $key = explode(' ', $keyword);
         $selectedCustomer = $this->user->where('id', session('customer_id'))->first();
@@ -441,7 +441,7 @@ class POSController extends Controller
         $order->user_id = session()->get('customer_id') ?? null;
         $order->coupon_discount_title = $request->coupon_discount_title == 0 ? null : 'coupon_discount_title';
         $order->payment_status = ($orderType == 'take_away') ? 'paid' : (($orderType == 'dine_in' && $request->type != 'pay_after_eating') ? 'paid' : 'unpaid');
-        $order->order_status = $orderType == 'take_away' ? 'delivered' : 'confirmed' ;
+        $order->order_status = 'confirmed' ; // All orders start as confirmed for KDS
         $order->order_type = ($orderType == 'take_away') ? 'pos' : (($orderType == 'dine_in') ? 'dine_in' : (($orderType == 'home_delivery') ? 'delivery' : null));
         $order->coupon_code = $request->coupon_code ?? null;
         $order->payment_method = $request->type;

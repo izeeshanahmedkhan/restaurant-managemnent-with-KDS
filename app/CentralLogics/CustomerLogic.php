@@ -9,6 +9,7 @@ use App\User;
 use App\Model\WalletTransaction;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CustomerLogic{
@@ -178,7 +179,7 @@ class CustomerLogic{
             try {
                 Helpers::send_push_notif_to_device($customerFcmToken, $data);
             }catch (\Exception $e) {
-                dd($e);
+                Log::error('Push notification failed', ['error' => $e->getMessage()]);
             }
         }
 
