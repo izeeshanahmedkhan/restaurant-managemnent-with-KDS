@@ -33,10 +33,11 @@
                     <form class="" id="form-id" action="{{route('admin.auth.login')}}" method="post">
                         @csrf
                         <div class="auth-header">
-                            <div class="mb-5">
-                                <h2 class="title">{{translate('sign_in')}}</h2>
-                                <div class="text-capitalize">{{translate('welcome_back')}}</div>
-                            </div>
+                                                    <div class="mb-5">
+                            <h2 class="title">{{translate('sign_in')}}</h2>
+                            <div class="text-capitalize">{{translate('welcome_back')}}</div>
+                            <span class="badge badge-primary mt-2">Admin Login</span>
+                        </div>
                         </div>
 
                         <div class="js-form-message form-group">
@@ -84,11 +85,17 @@
                         </div>
                         <button type="submit" class="btn btn-lg btn-block btn-primary" id="signInBtn">{{translate('sign_in')}}</button>
                     </form>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{route('homepage')}}" class="btn btn-outline-secondary">
+                            <i class="tio-home"></i> Back to Home
+                        </a>
+                    </div>
 
                     <div class="border-top border-primary pt-5 mt-10">
                         <div class="row">
                             <div class="col-10">
-                                <span>{{translate('Email : admin@example.com')}}</span><br>
+                                <span>{{translate('Email : admin@admin.com')}}</span><br>
                                 <span>{{translate('Password : 12345678')}}</span>
                             </div>
                             <div class="col-2">
@@ -147,7 +154,7 @@
         "use strict";
 
         function copy_cred() {
-            $('#signinSrEmail').val('admin@example.com');
+            $('#signinSrEmail').val('admin@admin.com');
             $('#signupSrPassword').val('12345678');
             toastr.success('{{\App\CentralLogics\translate("Copied successfully!")}}', 'Success!', {
                 CloseButton: true,

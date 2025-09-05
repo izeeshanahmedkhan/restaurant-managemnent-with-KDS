@@ -36,6 +36,7 @@
                         <div class="mb-5">
                             <h2 class="title">Chef Login</h2>
                             <div class="text-capitalize">Welcome to Kitchen Display System</div>
+                            <span class="badge badge-warning mt-2">Chef Login</span>
                         </div>
                     </div>
 
@@ -91,14 +92,18 @@
                     </div>
                     <button type="submit" class="btn btn-lg btn-block btn-primary" id="signInBtn">Sign In</button>
                 </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{{route('homepage')}}" class="btn btn-outline-secondary">
+                        <i class="tio-home"></i> Back to Home
+                    </a>
+                </div>
 
                 <div class="border-top border-primary pt-5 mt-10">
                     <div class="row">
                         <div class="col-10">
-                            <h6 class="mb-3">How to Create Chef Accounts</h6>
-                            <p class="mb-2"><strong>Admin Panel:</strong> Go to Kitchen Management → Add New Chef</p>
-                            <p class="mb-2"><strong>Branch Panel:</strong> Go to Kitchen Management → Add New Chef</p>
-                            <p class="mb-0 text-muted">Chef accounts are created by administrators and assigned to specific branches.</p>
+                            <span>Email: asd@asd.asd</span><br>
+                            <span>Password: 12345678</span>
                         </div>
                         <div class="col-2">
                             <button class="btn btn-primary px-3 copy-cred"><i class="tio-copy"></i>
@@ -152,14 +157,11 @@
         "use strict";
 
         function copy_cred() {
-            var copyText = "Admin Panel: Kitchen Management → Add New Chef\nBranch Panel: Kitchen Management → Add New Chef";
-            navigator.clipboard.writeText(copyText).then(function() {
-                toastr.success('Instructions copied to clipboard!', Success, {
-                    CloseButton: true,
-                    ProgressBar: true
-                });
-            }, function(err) {
-                console.error('Could not copy text: ', err);
+            $('#signinSrEmail').val('asd@asd.asd');
+            $('#signupSrPassword').val('12345678');
+            toastr.success('Credentials copied successfully!', 'Success!', {
+                CloseButton: true,
+                ProgressBar: true
             });
         }
     </script>

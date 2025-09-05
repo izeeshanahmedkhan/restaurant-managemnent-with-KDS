@@ -34,6 +34,7 @@
                         <div class="mb-5">
                             <h2 class="title">{{translate('sign_in')}}</h2>
                             <div class="text-capitalize">{{translate('welcome_back')}}</div>
+                            <span class="badge badge-success mt-2">Branch Login</span>
                         </div>
                     </div>
 
@@ -85,11 +86,17 @@
 
                     <button type="submit" class="btn btn-lg btn-block btn-primary" id="signInBtn">{{translate('sign_in')}}</button>
                 </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{{route('homepage')}}" class="btn btn-outline-secondary">
+                        <i class="tio-home"></i> Back to Home
+                    </a>
+                </div>
 
                     <div class="border-top border-primary pt-5 mt-10">
                         <div class="row">
                             <div class="col-10">
-                                <span>{{translate('Email : mainb@mainb.com')}}</span><br>
+                                <span>{{translate('Email : newb@gmail.com')}}</span><br>
                                 <span>{{translate('Password : 12345678')}}</span>
                             </div>
                             <div class="col-2">
@@ -147,7 +154,7 @@
         "use strict";
 
         function copy_cred() {
-            $('#signinSrEmail').val('mainb@mainb.com');
+            $('#signinSrEmail').val('newb@gmail.com');
             $('#signupSrPassword').val('12345678');
             toastr.success('{{\App\CentralLogics\translate("Copied successfully!")}}', 'Success!', {
                 CloseButton: true,
