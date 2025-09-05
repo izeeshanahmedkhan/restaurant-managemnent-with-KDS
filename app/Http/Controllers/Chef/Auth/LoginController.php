@@ -48,18 +48,9 @@ class LoginController extends Controller
         if (Auth::guard('chef')->attempt(['email' => $request->email, 'password' => $request->password], $request->remember)) {
             $chef = Auth::guard('chef')->user();
             
-            \Log::info('Chef login attempt successful', [
-                'user_id' => $chef->id,
-                'email' => $chef->email,
-                'user_type' => $chef->user_type
-            ]);
             
             // Check if user is a kitchen staff
             if ($chef->user_type !== 'kitchen') {
-                \Log::warning('Chef login failed - wrong user type', [
-                    'user_id' => $chef->id,
-                    'user_type' => $chef->user_type
-                ]);
                 Auth::guard('chef')->logout();
                 return back()->withErrors(translate('Access denied. This account is not authorized for kitchen access.'));
             }
@@ -67,24 +58,14 @@ class LoginController extends Controller
             // Check if chef has any assigned branches
             $assignedBranches = ChefBranch::where('user_id', $chef->id)->pluck('branch_id');
             if ($assignedBranches->isEmpty()) {
-                \Log::warning('Chef login failed - no branches assigned', [
-                    'user_id' => $chef->id
-                ]);
                 Auth::guard('chef')->logout();
                 return back()->withErrors(translate('No branches assigned to this chef'));
             }
 
-            \Log::info('Chef login successful, redirecting to dashboard', [
-                'user_id' => $chef->id,
-                'assigned_branches' => $assignedBranches->toArray()
-            ]);
 
             return redirect()->route('chef.dashboard');
         }
 
-        \Log::warning('Chef login failed - invalid credentials', [
-            'email' => $request->email
-        ]);
 
         return back()->withErrors(translate('Credentials do not match or account has been suspended.'));
     }
