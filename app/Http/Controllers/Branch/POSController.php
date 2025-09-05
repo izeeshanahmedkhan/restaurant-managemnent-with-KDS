@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Models\DeliveryChargeByArea;
+use App\Model\BusinessSetting;
 use Rap2hpoutre\FastExcel\FastExcel;
 use function App\CentralLogics\translate;
 
@@ -41,6 +42,7 @@ class POSController extends Controller
         private Product         $product,
         private Branch          $branch,
         private ProductByBranch $product_by_Branch,
+        private BusinessSetting $business_setting,
     )
     {}
 

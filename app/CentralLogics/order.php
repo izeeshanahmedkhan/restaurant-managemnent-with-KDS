@@ -38,7 +38,7 @@ class OrderLogic
             $or = [
                 'id' => 100000 + Order::all()->count() + 1,
                 'user_id' => $customer_id,
-                'order_amount' => CartManager::cart_grand_total($cart) - $discount,
+                'order_amount' => $cart['total_price'] - $discount,
                 'payment_status' => 'unpaid',
                 'order_status' => 'pending',
                 'payment_method' => $payment_method,

@@ -40,14 +40,7 @@ class KDSController extends Controller
         if (!$selectedBranch) {
             $selectedBranch = Branch::where('status', 1)->first();
             if ($selectedBranch) {
-                \Log::warning('Branch KDS Dashboard - Using fallback branch', [
-                    'user_id' => $user->id,
-                    'user_branch_id' => $user->branch_id,
-                    'fallback_branch_id' => $selectedBranch->id,
-                    'fallback_branch_name' => $selectedBranch->name
-                ]);
             } else {
-                \Log::error('Branch KDS Dashboard - No active branches found in database');
             }
         }
         

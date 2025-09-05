@@ -34,12 +34,6 @@
                         <div class="mb-5">
                             <h2 class="title">{{translate('sign_in')}}</h2>
                             <div class="text-capitalize">{{translate('welcome_back')}}</div>
-                            <p class="mb-0 text-capitalize">{{translate('want_to_login_your_admin')}}?
-                                <a href="{{route('admin.auth.login')}}">
-                                    {{translate('admin_login')}}
-                                </a>
-                            </p>
-                            <span class="badge mt-2">( {{translate('branch_sign_in')}} )</span>
                         </div>
                     </div>
 
@@ -48,7 +42,7 @@
 
                         <input type="email" class="form-control form-control-lg" name="email" id="signinSrEmail"
                                tabindex="1" placeholder="{{translate('email@address.com')}}" aria-label="email@address.com"
-                               required data-msg="Please enter a valid email address.">
+                               required data-msg="{{ translate('Please enter a valid email address') }}">
                     </div>
 
                     <div class="js-form-message form-group">
@@ -62,7 +56,7 @@
                             <input type="password" class="js-toggle-password form-control form-control-lg"
                                    name="password" id="signupSrPassword" placeholder="{{translate('8+ characters required')}}"
                                    aria-label="8+ characters required" required
-                                   data-msg="Your password is invalid. Please try again."
+                                   data-msg="{{ translate('Your password is invalid. Please try again.') }}"
                                    data-hs-toggle-password-options='{
                                                 "target": "#changePassTarget",
                                         "defaultClass": "tio-hidden-outlined",
@@ -87,38 +81,6 @@
                         </div>
                     </div>
 
-                    @php($recaptcha = \App\CentralLogics\Helpers::get_business_settings('recaptcha'))
-                    @if(isset($recaptcha) && $recaptcha['status'] == 1)
-                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
-
-                        <input type="hidden" name="set_default_captcha" id="set_default_captcha_value" value="0" >
-
-                        <div class="row p-2 d-none" id="reload-captcha">
-                            <div class="col-5 pr-0">
-                                <input type="text" class="form-control form-control-lg border-none" name="default_captcha_value" value=""
-                                       placeholder="{{translate('Enter captcha value')}}" autocomplete="off">
-                            </div>
-                            <div class="col-7 input-icons bg-white rounded">
-                                <a class="refresh-recaptcha">
-                                    <img src="{{ URL('/branch/auth/code/captcha/1') }}" class="input-field recaptcha-image" id="default_recaptcha_id">
-                                    <i class="tio-refresh icon"></i>
-                                </a>
-                            </div>
-                        </div>
-                    @else
-                        <div class="row p-2">
-                            <div class="col-5 pr-0">
-                                <input type="text" class="form-control form-control-lg border-none" name="default_captcha_value" value=""
-                                       placeholder="{{translate('Enter captcha value')}}" autocomplete="off">
-                            </div>
-                            <div class="col-7 input-icons" class="bg-white rounded">
-                                <a class="refresh-recaptcha">
-                                    <img src="{{ URL('/branch/auth/code/captcha/1') }}" class="input-field recaptcha-image" id="default_recaptcha_id">
-                                    <i class="tio-refresh icon"></i>
-                                </a>
-                            </div>
-                        </div>
-                    @endif
 
 
                     <button type="submit" class="btn btn-lg btn-block btn-primary" id="signInBtn">{{translate('sign_in')}}</button>
@@ -131,7 +93,7 @@
                                 <span>{{translate('Password : 12345678')}}</span>
                             </div>
                             <div class="col-2">
-                                <button class="btn btn-primary px-3" id="copyButton"><i class="tio-copy"></i>
+                                <button class="btn btn-primary px-3 copy-cred"><i class="tio-copy"></i>
                                 </button>
                             </div>
                         </div>
@@ -160,8 +122,9 @@
 @endif
 
 <script>
-    $(document).on('ready', function () {
+    "use strict";
 
+    $(document).on('ready', function () {
         $('.js-toggle-password').each(function () {
             new HSTogglePassword(this).init()
         });
@@ -169,76 +132,24 @@
         $('.js-validate').each(function () {
             $.HSCore.components.HSValidation.init($(this));
         });
-    });
-</script>
 
-@if(isset($recaptcha) && $recaptcha['status'] == 1)
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js?render={{$recaptcha['site_key']}}"></script>
-    <script>
-        "use strict";
-        $('#signInBtn').click(function (e) {
-
-            if( $('#set_default_captcha_value').val() == 1){
-                $('#form-id').submit();
-                return true;
-            }
-            e.preventDefault();
-
-            if (typeof grecaptcha === 'undefined') {
-                toastr.error('Invalid recaptcha key provided. Please check the recaptcha configuration.');
-
-                $('#reload-captcha').removeClass('d-none');
-                $('#set_default_captcha_value').val('1');
-
-                return;
-            }
-
-            grecaptcha.ready(function () {
-                grecaptcha.execute('{{$recaptcha['site_key']}}', {action: 'submit'}).then(function (token) {
-                    document.getElementById('g-recaptcha-response').value = token;
-                    document.querySelector('form').submit();
-                });
-            });
-            window.onerror = function(message) {
-                var errorMessage = 'An unexpected error occurred. Please check the recaptcha configuration';
-                if (message.includes('Invalid site key')) {
-                    errorMessage = 'Invalid site key provided. Please check the recaptcha configuration.';
-                } else if (message.includes('not loaded in api.js')) {
-                    errorMessage = 'reCAPTCHA API could not be loaded. Please check the recaptcha API configuration.';
-                }
-
-                $('#reload-captcha').removeClass('d-none');
-                $('#set_default_captcha_value').val('1');
-
-                toastr.error(errorMessage)
-                return true;
-            };
-        });
-    </script>
-@endif
-    <script type="text/javascript">
-        $('.refresh-recaptcha').on('click', function() {
+        $(".re-captcha").click(function() {
             re_captcha();
         });
 
-        function re_captcha() {
-            $url = "{{ URL('/branch/auth/code/captcha') }}";
-            $url = $url + "/" + Math.random();
-            document.getElementById('default_recaptcha_id').src = $url;
-        }
-    </script>
-
-
-    <script>
-        $('#copyButton').on('click', function() {
+        $(".copy-cred").click(function() {
             copy_cred();
         });
+    });
+</script>
+
+    <script>
+        "use strict";
 
         function copy_cred() {
             $('#signinSrEmail').val('mainb@mainb.com');
             $('#signupSrPassword').val('12345678');
-            toastr.success('Copied successfully!', 'Success!', {
+            toastr.success('{{\App\CentralLogics\translate("Copied successfully!")}}', 'Success!', {
                 CloseButton: true,
                 ProgressBar: true
             });
