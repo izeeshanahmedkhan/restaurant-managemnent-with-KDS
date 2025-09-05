@@ -309,6 +309,10 @@
             return;
         }
 
+        // Check if we're in fullscreen mode
+        const isFullscreen = $('.kds-container').hasClass('fullscreen');
+        console.log('KDS: Fullscreen mode for dish modal:', isFullscreen);
+
         // Get all orders containing this dish
         const branchId = $('#branch-selector').val();
         if (!branchId) {
@@ -329,21 +333,37 @@
         })
         .done(function(response) {
             if (response && response.orders) {
-                renderDishModal(dish, response.orders);
+                let $modal;
                 
-                // Check if we're in fullscreen mode
-                const isFullscreen = $('.kds-container').hasClass('fullscreen');
-                
-                // Move modal outside fullscreen container if in fullscreen mode
                 if (isFullscreen) {
-                    $('#dish-modal').detach().appendTo('body');
-                    console.log('KDS: Moved dish modal outside fullscreen container');
+                    // Create modal directly in body for fullscreen mode
+                    $modal = $('<div id="dish-modal" class="kds-dish-modal"></div>');
+                    $modal.html(`
+                        <div class="kds-dish-modal__overlay"></div>
+                        <div class="kds-dish-modal__content">
+                            <div class="kds-dish-modal__header">
+                                <h2 class="kds-dish-modal__title">Dish Details</h2>
+                                <button class="kds-dish-modal__close" id="dish-modal-close">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="kds-dish-modal__body" id="dish-modal-body">
+                                <!-- Dish details will be populated here -->
+                            </div>
+                        </div>
+                    `);
+                    $('body').append($modal);
+                    console.log('KDS: Created dish modal directly in body for fullscreen');
+                } else {
+                    // Use existing modal for normal mode
+                    $modal = $('#dish-modal');
                 }
                 
-                $('#dish-modal').addClass('show');
+                renderDishModal(dish, response.orders, $modal);
+                $modal.addClass('show');
                 
                 if (isFullscreen) {
-                    $('#dish-modal').css({
+                    $modal.css({
                         'display': 'flex !important',
                         'opacity': '1 !important',
                         'visibility': 'visible !important',
@@ -352,8 +372,10 @@
                         'top': '0 !important',
                         'left': '0 !important',
                         'width': '100vw !important',
-                        'height': '100vh !important'
+                        'height': '100vh !important',
+                        'background': 'rgba(0, 0, 0, 0.7) !important'
                     });
+                    console.log('KDS: Applied fullscreen dish modal styles');
                 }
                 
                 $('body').addClass('modal-open');
@@ -372,12 +394,25 @@
      * Hide dish modal
      */
     function hideDishModal() {
-        $('#dish-modal').removeClass('show');
+        const $modal = $('#dish-modal');
         
-        // Reset any forced styles in fullscreen mode
+        if (!$modal.length) {
+            console.error('Dish modal not found');
+            return;
+        }
+        
+        $modal.removeClass('show');
+        
+        // Check if we're in fullscreen mode
         const isFullscreen = $('.kds-container').hasClass('fullscreen');
+        
         if (isFullscreen) {
-            $('#dish-modal').css({
+            // Remove the dynamically created modal
+            $modal.remove();
+            console.log('KDS: Removed dynamically created dish modal');
+        } else {
+            // Reset any forced styles for normal mode
+            $modal.css({
                 'display': '',
                 'opacity': '',
                 'visibility': '',
@@ -388,10 +423,6 @@
                 'width': '',
                 'height': ''
             });
-            
-            // Move modal back to its original position
-            $('#dish-modal').detach().appendTo('.kds-container');
-            console.log('KDS: Moved dish modal back to container');
         }
         
         $('body').removeClass('modal-open');
@@ -400,9 +431,11 @@
     /**
      * Render dish modal content
      */
-    function renderDishModal(dish, orders) {
-        const $modal = $('#dish-modal');
-        const $body = $('#dish-modal-body');
+    function renderDishModal(dish, orders, $modal = null) {
+        if (!$modal) {
+            $modal = $('#dish-modal');
+        }
+        const $body = $modal.find('#dish-modal-body');
         
         // Ensure orders is an array
         if (!Array.isArray(orders)) {

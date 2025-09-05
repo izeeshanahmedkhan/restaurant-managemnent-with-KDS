@@ -810,8 +810,39 @@
     function showOrderModal(orderData) {
         console.log('KDS: showOrderModal called with:', orderData);
         
-        const $modal = $('#order-modal');
-        const $modalBody = $('#modal-body');
+        // Check if we're in fullscreen mode
+        const isFullscreen = $('.kds-container').hasClass('fullscreen');
+        console.log('KDS: Fullscreen mode:', isFullscreen);
+        
+        let $modal, $modalBody;
+        
+        if (isFullscreen) {
+            // Create modal directly in body for fullscreen mode
+            $modal = $('<div id="order-modal" class="kds-modal"></div>');
+            $modal.html(`
+                <div class="kds-modal__overlay"></div>
+                <div class="kds-modal__content">
+                    <div class="kds-modal__header">
+                        <h2 class="kds-modal__title">Order Details</h2>
+                        <button class="kds-modal__close" id="modal-close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="kds-modal__body" id="modal-body">
+                        <!-- Order details will be populated here -->
+                    </div>
+                </div>
+            `);
+            $('body').append($modal);
+            $modalBody = $modal.find('#modal-body');
+            console.log('KDS: Created modal directly in body for fullscreen');
+            console.log('KDS: Modal in DOM:', $modal.length > 0);
+            console.log('KDS: Modal body in DOM:', $modalBody.length > 0);
+        } else {
+            // Use existing modal for normal mode
+            $modal = $('#order-modal');
+            $modalBody = $('#modal-body');
+        }
         
         console.log('KDS: Modal element found:', $modal.length > 0);
         console.log('KDS: Modal body found:', $modalBody.length > 0);
@@ -832,21 +863,11 @@
             console.log('KDS: Modal HTML generated:', modalHtml);
             $modalBody.html(modalHtml);
             
-            // Check if we're in fullscreen mode
-            const isFullscreen = $('.kds-container').hasClass('fullscreen');
-            console.log('KDS: Fullscreen mode:', isFullscreen);
-            
-            // Move modal outside fullscreen container if in fullscreen mode
-            if (isFullscreen) {
-                $modal.detach().appendTo('body');
-                console.log('KDS: Moved modal outside fullscreen container');
-            }
-            
             // Show modal
             console.log('KDS: Adding show class to modal');
             $modal.addClass('show');
             
-            // Force display in fullscreen mode
+            // Apply fullscreen styles if needed
             if (isFullscreen) {
                 $modal.css({
                     'display': 'flex !important',
@@ -857,8 +878,10 @@
                     'top': '0 !important',
                     'left': '0 !important',
                     'width': '100vw !important',
-                    'height': '100vh !important'
+                    'height': '100vh !important',
+                    'background': 'rgba(0, 0, 0, 0.7) !important'
                 });
+                console.log('KDS: Applied fullscreen modal styles');
             }
             
             // Focus on modal for accessibility
@@ -888,9 +911,15 @@
         try {
             $modal.removeClass('show');
             
-            // Reset any forced styles in fullscreen mode
+            // Check if we're in fullscreen mode
             const isFullscreen = $('.kds-container').hasClass('fullscreen');
+            
             if (isFullscreen) {
+                // Remove the dynamically created modal
+                $modal.remove();
+                console.log('KDS: Removed dynamically created modal');
+            } else {
+                // Reset any forced styles for normal mode
                 $modal.css({
                     'display': '',
                     'opacity': '',
@@ -902,10 +931,6 @@
                     'width': '',
                     'height': ''
                 });
-                
-                // Move modal back to its original position
-                $modal.detach().appendTo('.kds-container');
-                console.log('KDS: Moved modal back to container');
             }
             
             // Restore body scroll
