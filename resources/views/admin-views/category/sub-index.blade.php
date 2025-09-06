@@ -63,7 +63,7 @@
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <select id="exampleFormControlSelect1" name="parent_id" class="form-control js-select2-custom" required>
-                                                <option disabled selected>{{\App\CentralLogics\translate('Select a category')}}</option>
+                                                <option disabled selected>{{translate('Select a category')}}</option>
                                             @foreach(\App\Model\Category::where(['position'=>0])->get() as $category)
                                                     <option value="{{$category['id']}}">{{$category['name']}}</option>
                                                 @endforeach

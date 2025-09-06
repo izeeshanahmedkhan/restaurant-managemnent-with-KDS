@@ -10,8 +10,6 @@ use App\Http\Controllers\Branch\OrderController;
 use App\Http\Controllers\Branch\POSController;
 use App\Http\Controllers\Branch\ProductController;
 use App\Http\Controllers\Branch\SystemController;
-use App\Http\Controllers\Branch\TableController;
-use App\Http\Controllers\Branch\TableOrderController;
 use App\Http\Controllers\Branch\KDSController;
 
 Route::group(['namespace' => 'Branch', 'as' => 'branch.', 'middleware' => 'maintenance_mode'], function () {
@@ -66,23 +64,15 @@ Route::group(['namespace' => 'Branch', 'as' => 'branch.', 'middleware' => 'maint
             Route::get('details/{id}', [OrderController::class, 'details'])->name('details');
             Route::post('increase-preparation-time/{id}', [OrderController::class, 'preparationTime'])->name('increase-preparation-time');
             Route::get('status', [OrderController::class, 'status'])->name('status');
-            Route::get('add-delivery-man/{order_id}/{delivery_man_id}', [OrderController::class, 'addDeliveryman'])->name('add-delivery-man');
             Route::get('payment-status', [OrderController::class, 'paymentStatus'])->name('payment-status');
             Route::get('generate-invoice/{id}', [OrderController::class, 'generateInvoice'])->name('generate-invoice');
             Route::post('add-payment-ref-code/{id}', [OrderController::class, 'addPaymentReferenceCode'])->name('add-payment-ref-code');
             Route::get('export-excel', [OrderController::class, 'exportExcel'])->name('export-excel');
             Route::get('ajax-change-delivery-time-date/{order_id}', [OrderController::class, 'changeDeliveryTimeDate'])->name('ajax-change-delivery-time-date');
-            Route::get('verify-offline-payment/{order_id}/{status}', [OrderController::class, 'verifyOfflinePayment']);
+            // Offline payment verification functionality removed
             Route::post('update-order-delivery-area/{order_id}', [OrderController::class, 'updateOrderDeliveryArea'])->name('update-order-delivery-area');
         });
 
-        Route::group(['prefix' => 'table/order', 'as' => 'table.order.', 'middleware' => ['app_activate:' . APPS['table_app']['software_id']]], function () {
-            Route::get('list/{status}', [TableOrderController::class, 'orderList'])->name('list');
-            Route::get('details/{id}', [TableOrderController::class, 'orderDetails'])->name('details');
-            Route::get('running', [TableOrderController::class, 'tableRunningOrder'])->name('running');
-            Route::get('running/invoice', [TableOrderController::class, 'runningOrderInvoice'])->name('running.invoice');
-            Route::get('export-excel', [TableOrderController::class, 'exportExcel'])->name('export-excel');
-        });
 
         Route::group(['prefix' => 'order', 'as' => 'order.'], function () {
             Route::get('list/{status}', [OrderController::class, 'list'])->name('list');
@@ -90,17 +80,8 @@ Route::group(['namespace' => 'Branch', 'as' => 'branch.', 'middleware' => 'maint
             Route::post('update-shipping', [OrderController::class, 'updateShipping'])->name('update-shipping');
         });
 
-        Route::group(['prefix' => 'table', 'as' => 'table.','middleware'=>[ 'app_activate:' . APPS['table_app']['software_id']]], function () {
-            Route::get('index', [TableController::class, 'index'])->name('index');
-            Route::get('list', [TableController::class, 'list'])->name('list');
-            Route::post('store', [TableController::class, 'store'])->name('store');
-            Route::get('edit/{id}', [TableController::class, 'edit'])->name('edit');
-            Route::post('update/{id}', [TableController::class, 'update'])->name('update');
-            Route::delete('delete/{id}', [TableController::class, 'delete'])->name('delete');
-            Route::get('status/{id}/{status}', [TableController::class, 'status'])->name('status');
-        });
 
-        Route::group(['prefix' => 'kitchen', 'as' => 'kitchen.','middleware'=>[ 'app_activate:' . APPS['kitchen_app']['software_id']]], function () {
+        Route::group(['prefix' => 'kitchen', 'as' => 'kitchen.'], function () {
             Route::get('list', [KitchenController::class, 'list'])->name('list');
             Route::get('add-new', [KitchenController::class, 'index'])->name('add-new');
             Route::post('add-new', [KitchenController::class, 'store']);
@@ -110,7 +91,7 @@ Route::group(['namespace' => 'Branch', 'as' => 'branch.', 'middleware' => 'maint
             Route::get('status/{id}/{status}', [KitchenController::class, 'status'])->name('status');
         });
 
-        Route::group(['prefix' => 'promotion', 'as' => 'promotion.','middleware'=>[ 'app_activate:' . APPS['table_app']['software_id']]], function () {
+        Route::group(['prefix' => 'promotion', 'as' => 'promotion.'], function () {
             Route::get('create', [BranchPromotionController::class, 'create'])->name('create');
             Route::post('store', [BranchPromotionController::class, 'store'])->name('store');
             Route::get('edit/{id}', [BranchPromotionController::class, 'edit'])->name('edit');
@@ -132,8 +113,7 @@ Route::group(['namespace' => 'Branch', 'as' => 'branch.', 'middleware' => 'maint
 
         });
 
-        Route::get('verify-offline-payment/quick-view-details', [OrderController::class, 'offlineViewDetails'])->name('offline-modal-view');
-        Route::get('verify-offline-payment/{status}', [OrderController::class, 'offlineOrderList'])->name('verify-offline-payment');
+        // Offline payment functionality removed
 
         // KDS (Kitchen Display System) Routes
         Route::group(['prefix' => 'kds', 'as' => 'kds.'], function () {

@@ -54,12 +54,12 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h5>{{translate('Cutlery Option')}} : <span class="{{ $order['is_cutlery_required'] == 1 ? 'badge-soft-success' : 'badge-soft-danger' }}">{{$order['is_cutlery_required'] == 1 ? 'On' : 'Off'}}</span></h5>
+                                    {{-- Table management functionality removed --}}
                                     @if($order['order_note'])
                                         <h5>{{translate('order')}} {{translate('note')}} : {{$order['order_note']}}</h5>
                                     @endif
                                     @if($order['bring_change_amount'])
-                                        <h5>{{ translate('Bring Change Note') }}: <span class="badge-soft-success">{{translate('Please ensure the Deliveryman has '). \App\CentralLogics\Helpers::set_symbol($order['bring_change_amount']) . translate(' in change ready for the customer')}}</span></h5>
+                                        <h5>{{ translate('Bring Change Note') }}: <span class="badge-soft-success">{{translate('Please ensure you have '). \App\CentralLogics\Helpers::set_symbol($order['bring_change_amount']) . translate(' in change ready for the customer')}}</span></h5>
                                     @endif
                                 </div>
                             </div>
@@ -69,32 +69,7 @@
                                         @if($order['order_type']!='take_away' && $order['order_type'] != 'pos' && $order['order_type'] != 'dine_in')
 
                                             @php($googleMapStatus = \App\CentralLogics\Helpers::get_business_settings('google_map_status'))
-                                            @if($googleMapStatus)
-                                                <div class="hs-unfold ml-1">
-                                                    @if($order['order_status']=='out_for_delivery')
-                                                        @php($origin=\App\Model\DeliveryHistory::where(['deliveryman_id'=>$order['delivery_man_id'],'order_id'=>$order['id']])->first())
-                                                        @php($current=\App\Model\DeliveryHistory::where(['deliveryman_id'=>$order['delivery_man_id'],'order_id'=>$order['id']])->latest()->first())
-                                                        @if(isset($origin))
-                                                            <a class="btn btn-outline-primary" target="_blank"
-                                                               title="{{translate('Delivery Man Last Location')}}" data-toggle="tooltip" data-placement="top"
-                                                               href="https://www.google.com/maps/dir/?api=1&origin={{$origin['latitude']}},{{$origin['longitude']}}&destination={{$current['latitude']}},{{$current['longitude']}}">
-                                                                <i class="tio-map"></i> {{translate('Show_Location_in_Map')}}
-                                                            </a>
-                                                        @else
-                                                            <a class="btn btn-outline-primary" href="javascript:" data-toggle="tooltip"
-                                                               data-placement="top" title="{{translate('Waiting for location...')}}">
-                                                                <i class="tio-map"></i> {{translate('Show_Location_in_Map')}}
-                                                            </a>
-                                                        @endif
-                                                    @else
-                                                        <a class="btn btn-outline-dark last-location-view" href="javascript:"
-                                                           data-toggle="tooltip" data-placement="top"
-                                                           title="{{translate('Only available when order is out for delivery!')}}">
-                                                            <i class="tio-map"></i> {{translate('Show_Location_in_Map')}}
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            @endif
+                                            {{-- Delivery man functionality removed --}}
 
                                         @endif
                                         <a class="btn btn-info" href={{route('admin.orders.generate-invoice',[$order['id']])}}>
@@ -127,7 +102,7 @@
                                         <span class="text-dark">{{str_replace('_',' ',$order['payment_method'])}}</span>
                                     </div>
 
-                                    @if(!in_array($order['payment_method'], ['cash_on_delivery', 'wallet_payment', 'offline_payment']))
+                                    @if(!in_array($order['payment_method'], ['cash_on_delivery']))
                                         @if($order['transaction_reference']==null && $order['order_type']!='pos' && $order['order_type'] != 'dine_in')
                                             <div class="d-flex gap-3 justify-content-sm-end align-items-center mb-3">
                                                 {{translate('reference')}} {{translate('code')}} :
@@ -321,14 +296,7 @@
                                         {{ Helpers::set_symbol($addOnsCost) }}
                                     </dd>
 
-                                    <dt class="col-6">
-                                        <div class="d-flex max-w220 ml-auto">
-                                            <span>{{translate('coupon')}} {{translate('discount')}}</span>
-                                            <span>:</span>
-                                        </div>
-                                    </dt>
-                                    <dd class="col-6 text-dark text-right">
-                                        - {{ Helpers::set_symbol($order['coupon_discount_amount']) }}</dd>
+                                    {{-- Coupon functionality removed --}}
 
                                     <dt class="col-6">
                                         <div class="d-flex max-w220 ml-auto">
@@ -364,7 +332,7 @@
                                         </div>
                                     </dt>
                                     <dd class="col-6 text-dark text-right">
-                                        {{ Helpers::set_symbol($subTotal = $subTotal+$totalTax+$addOnsCost-$totalDisOnPro + $addOnsTaxCost - $order['coupon_discount_amount'] - $order['extra_discount'] - $order['referral_discount']) }}</dd>
+                                        {{ Helpers::set_symbol($subTotal = $subTotal+$totalTax+$addOnsCost-$totalDisOnPro + $addOnsTaxCost - $order['extra_discount'] - $order['referral_discount']) }}</dd>
 
                                     <dt class="col-6">
                                         <div class="d-flex max-w220 ml-auto">
@@ -448,27 +416,8 @@
                         <div class="card-body text-capitalize d-flex flex-column gap-4">
                             <h4 class="mb-0 text-center">{{translate('Order_Setup')}}</h4>
 
-                            @if(isset($order->offline_payment))
-                                <div class="card mt-3">
-                                    <div class="card-body text-center">
-                                        @if($order->offline_payment?->status == 1)
-                                            <h4 class="">{{ translate('Payment_verified') }}</h4>
-                                        @else
-                                            <h4 class="">{{ translate('Payment_verification') }}</h4>
-                                            <p class="text-danger">{{ translate('please verify the payment before confirm order') }}</p>
-                                            <div class="mt-3">
-                                                <button class="btn btn-primary" type="button"
-                                                        data-id="{{ $order['id'] }}"
-                                                        data-target="#payment_verify_modal" data-toggle="modal">{{ translate('Verify_Payment') }}
-                                                </button>
-                                            </div>
-                                        @endif
+                            <!-- Offline payment functionality removed -->
 
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($order['order_type'] != 'pos')
                                 <div class="hs-unfold w-100">
                                     <label class="font-weight-bold text-dark fz-14">{{translate('Change_Order_Status')}}</label>
                                     <div class="dropdown">
@@ -478,11 +427,7 @@
                                             {{ translate($order['order_status'])}}
                                         </button>
                                         <div class="dropdown-menu text-capitalize" aria-labelledby="dropdownMenuButton">
-                                            @if($order['payment_method'] == 'offline_payment' && $order->offline_payment?->status != 1)
-                                                @if($order['order_type'] != 'dine_in')
-                                                    <a class="dropdown-item offline-payment-order-alert"
-                                                       href="javascript:">{{translate('pending')}}</a>
-                                                @endif
+                                            <!-- Offline payment functionality removed -->
 
                                                 <a class="dropdown-item offline-payment-order-alert"
                                                    href="javascript:">{{translate('confirmed')}}</a>
@@ -562,24 +507,16 @@
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center gap-10 form-control">
                                         <span class="title-color">{{ translate('Payment Status') }}</span>
-                                        @if($order['payment_method'] == 'offline_payment' && $order->offline_payment?->status != 1)
-                                            <label class="switcher payment-status-text">
-                                                <input class="switcher_input offline-payment-status-alert" type="checkbox" name="payment_status" value="1" id="payment_status_switch"
-                                                    {{$order->payment_status == 'paid' ?'checked':''}}>
-                                                <span class="switcher_control"></span>
-                                            </label>
-                                        @else
-                                            <label class="switcher payment-status-text">
-                                                <input class="switcher_input change-payment-status" type="checkbox" name="payment_status" value="1"
-                                                       data-id="{{ $order['id'] }}"
-                                                       data-status="{{ $order->payment_status == 'paid' ?'unpaid':'paid' }}"
-                                                    {{$order->payment_status == 'paid' ?'checked':''}}>
-                                                <span class="switcher_control"></span>
-                                            </label>
-                                        @endif
+                                        <label class="switcher payment-status-text">
+                                            <input class="switcher_input change-payment-status" type="checkbox" name="payment_status" value="1"
+                                                   data-id="{{ $order['id'] }}"
+                                                   data-status="{{ $order->payment_status == 'paid' ?'unpaid':'paid' }}"
+                                                {{$order->payment_status == 'paid' ?'checked':''}}>
+                                            <span class="switcher_control"></span>
+                                        </label>
                                     </div>
                                 </div>
-                            @endif
+                            
                             @if($order->customer || $order->is_guest == 1)
                                 <div>
                                     <label class="font-weight-bold text-dark fz-14">{{translate('Delivery_Date_&_Time')}} {{$order['delivery_date'] > \Carbon\Carbon::now()->format('Y-m-d')? translate('(Scheduled)') : ''}}</label>
@@ -589,16 +526,10 @@
                                     </div>
 
                                 </div>
-                                @if($order['order_type']!='take_away' && $order['order_type'] != 'pos' && $order['order_type'] != 'dine_in' && !$order['delivery_man_id'])
-
-                                    <a href="#" class="btn btn-primary btn-block d-flex gap-1 justify-content-center align-items-center" data-toggle="modal" data-target="#assignDeliveryMan">
-                                        <img width="17" src="{{asset('assets/admin/img/icons/assain_delivery_man.png')}}" alt="">
-                                        {{translate('Assign_Delivery_Man')}}
-                                    </a>
-                                @endif
+                                {{-- Delivery man functionality removed --}}
                             @endif
                             <div>
-                                @if($order['order_type'] != 'pos' && $order['order_type'] != 'take_away' && ($order['order_status'] != DELIVERED && $order['order_status'] != RETURNED && $order['order_status'] != CANCELED && $order['order_status'] != FAILED && $order['order_status'] != COMPLETED))
+                                @if($order['order_type'] != 'pos' && $order['order_type'] != 'take_away' && !in_array($order['order_status'], ['delivered', 'returned', 'canceled', 'failed', 'completed']))
                                     <label class="font-weight-bold text-dark fz-14">{{translate('Food_Preparation_Time')}}</label>
                                     <div class="form-control justify-content-between">
                                         <span class="ml-2 ml-sm-3 ">
@@ -611,65 +542,7 @@
                             </div>
 
 
-                            @if($order->delivery_man_id)
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h4 class="mb-4 d-flex gap-2">
-                                    <span class="card-header-icon">
-                                        <i class="tio-user text-dark"></i>
-                                    </span>
-                                            <span>{{ translate('delivery_man') }}</span>
-                                            <a  href="#"  data-toggle="modal" data-target="#assignDeliveryMan"
-                                                class="text--base cursor-pointer ml-auto">
-                                                {{translate('Change')}}
-                                            </a>
-                                        </h4>
-                                        <div class="media flex-wrap gap-3">
-                                            <a>
-                                                <img class="avatar avatar-lg rounded-circle" src="{{$order->delivery_man?->imageFullPath }}" alt="Image">
-                                            </a>
-                                            <div class="media-body d-flex flex-column gap-1">
-                                                <a target="" href="#" class="text-dark"><span>{{$order->delivery_man['f_name'].' '.$order->delivery_man['l_name'] ?? ''}}</span></a>
-                                                <span class="text-dark"> <span>{{$order->delivery_man['orders_count']}}</span> {{translate('Orders')}}</span>
-                                                <span class="text-dark break-all">
-                                            <i class="tio-call-talking-quiet mr-2"></i>
-                                            <a href="tel:{{$order->delivery_man['phone']}}" class="text-dark">{{$order->delivery_man['phone'] ?? ''}}</a>
-                                        </span>
-                                                <span class="text-dark break-all">
-                                            <i class="tio-email mr-2"></i>
-                                            <a href="mailto:{{$order->delivery_man['email']}}" class="text-dark">{{$order->delivery_man['email'] ?? ''}}</a>
-                                        </span>
-                                            </div>
-                                        </div>
-                                        <hr class="w-100">
-                                        @if($order['order_status']=='out_for_delivery')
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <h5>{{translate('Last_location')}}</h5>
-                                            </div>
-                                            @php($origin=\App\Model\DeliveryHistory::where(['deliveryman_id'=>$order['delivery_man_id'],'order_id'=>$order['id']])->first())
-                                            @php($current=\App\Model\DeliveryHistory::where(['deliveryman_id'=>$order['delivery_man_id'],'order_id'=>$order['id']])->latest()->first())
-                                            @if(isset($origin))
-                                                <a target="_blank" class="text-dark"
-                                                   title="Delivery Boy Last Location" data-toggle="tooltip" data-placement="top"
-                                                   href="http://maps.google.com/maps?z=12&t=m&q=loc:{{$current['latitude']}}+{{$current['longitude']}}">
-                                                    <img width="13" src="{{asset('assets/admin/img/icons/location.png')}}" alt="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{$current['location']?? ''}}
-                                                </a>
-                                            @else
-                                                <a href="javascript:" data-toggle="tooltip" class="text-dark"
-                                                   data-placement="top" title="{{translate('Waiting for location...')}}">
-                                                    <img width="13" src="{{asset('assets/admin/img/icons/location.png')}}" alt="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{translate('Waiting for location...')}}
-                                                </a>
-                                            @endif
-                                        @else
-                                            <a href="javascript:" class="text-dark last-location-view"
-                                               data-toggle="tooltip" data-placement="top"
-                                               title="{{translate('Only available when order is out for delivery!')}}">
-                                                <img width="13" src="{{asset('assets/admin/img/icons/location.png')}}" alt="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{translate('Only available when order is out for delivery!')}}
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endif
+                            {{-- Delivery man functionality removed --}}
 
                             @if($order['order_type']!='take_away' && $order['order_type'] != 'pos' && $order['order_type'] != 'dine_in')
                             <div class="card">
@@ -765,34 +638,8 @@
 
                         </div>
                     </div>
-                    @endif
 
-                        @if($order->offline_payment)
-                            @php($payment = json_decode($order->offline_payment?->payment_info, true))
-
-                            <div class="card mt-2">
-                                <div class="card-body">
-                                    <h5 class="form-label mb-3">
-                                        <span class="card-header-icon"><i class="tio-shopping-basket"></i></span>
-                                        <span>{{translate('Offline payment information')}}</span>
-                                    </h5>
-                                    <div class="offline-payment--information-single flex-column mt-3">
-                                        <div class="d-flex">
-                                            <span class="name">{{ translate('payment_note') }}</span>
-                                            <span class="info">{{ $payment['payment_note'] }}</span>
-                                        </div>
-                                        @foreach($payment['method_information'] as $infos)
-                                            @foreach($infos as $info_key => $info)
-                                                <div class="d-flex">
-                                                    <span class="name">{{ $info_key }}</span>
-                                                    <span class="info">{{ $info }}</span>
-                                                </div>
-                                            @endforeach
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
+                        <!-- Offline payment functionality removed -->
 
 
                     <div class="card mb-3">
@@ -903,34 +750,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="assignDeliveryMan" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title fs-5" id="assignDeliveryManLabel">{{translate('Assign_Delivery_Man')}}</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <ul class="list-group">
-                        @foreach($deliverymen as $deliveryMan)
-                            <li class="list-group-item d-flex flex-wrap align-items-center gap-3 justify-content-between">
-                                <div class="media align-items-center gap-2 flex-wrap">
-                                    <div class="avatar">
-                                        <img class="img-fit rounded-circle" loading="lazy" decoding="async"
-                                         src="{{$deliveryMan->imageFullPath}}" alt="Jhon Doe">
-                                    </div>
-                                    <span>{{$deliveryMan['f_name'].' '.$deliveryMan['l_name']}}</span>
-                                </div>
-                                <a id="{{$deliveryMan->id}}" class="btn btn-primary btn-sm assign-deliveryman">{{translate('Assign')}}</a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{-- Delivery man functionality removed --}}
 
     <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"
          aria-hidden="true">
@@ -1060,7 +880,7 @@
         </div>
     </div>
 
-    @if($order['order_type'] != 'pos' && $order['order_type'] != 'take_away' && ($order['order_status'] != DELIVERED && $order['order_status'] != RETURNED && $order['order_status'] != CANCELED && $order['order_status'] != FAILED && $order['order_status'] != COMPLETED))
+    @if($order['order_type'] != 'pos' && $order['order_type'] != 'take_away' && !in_array($order['order_status'], ['delivered', 'returned', 'canceled', 'failed', 'completed']))
         <div class="modal fade" id="counter-change" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-sm" role="document">
                 <div class="modal-content">
@@ -1095,62 +915,7 @@
         </div>
     @endif
 
-    @if($order->offline_payment)
-        <div class="modal fade" id="payment_verify_modal">
-            <div class="modal-dialog modal-lg offline-details">
-                <div class="modal-content">
-                    <div class="modal-header justify-content-center">
-                        <h4 class="modal-title pb-2">{{translate('Payment_Verification')}}</h4>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-                    </div>
-                    <div class="card">
-                        <div class="modal-body mx-2">
-                            <p class="text-danger">{{translate('Please Check & Verify the payment information whether it is correct or not before confirm the order.')}}</p>
-                            <h5>{{translate('customer_Information')}}</h5>
-
-                            <div class="card-body">
-                                @if($order->is_guest == 0)
-                                    <p>{{ translate('name') }} : {{ $order->customer ? $order->customer->f_name.' '. $order->customer->l_name: ''}} </p>
-                                    <p>{{ translate('contact') }} : {{ $order->customer ? $order->customer->phone: ''}}</p>
-                                @else
-                                    <p>{{ translate('guest_customer') }} </p>
-                                @endif
-                            </div>
-
-                            <h5>{{translate('Payment_Information')}}</h5>
-                            @php($payment = json_decode($order->offline_payment?->payment_info, true))
-                            <div class="row card-body">
-                                <div class="col-md-6">
-                                    <p>{{ translate('Payment_Method') }} : {{ $payment['payment_name'] }}</p>
-                                    @foreach($payment['method_fields'] as $fields)
-                                        @foreach($fields as $field_key => $field)
-                                            <p>{{ $field_key }} : {{ $field }}</p>
-                                        @endforeach
-                                    @endforeach
-                                </div>
-                                <div class="col-md-6">
-                                    <p>{{ translate('payment_note') }} : {{ $payment['payment_note'] }}</p>
-                                    @foreach($payment['method_information'] as $infos)
-                                        @foreach($infos as $info_key => $info)
-                                            <p>{{ $info_key }} : {{ $info }}</p>
-                                        @endforeach
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="btn--container justify-content-center my-2 mx-3">
-                        @if($order->offline_payment?->status == 0)
-                            <a type="reset" class="btn btn-secondary verify-offline-payment" data-status="2">{{ translate('Payment_Did_Not_Received') }}</a>
-                        @endif
-                        @if($order->order_status != 'canceled')
-                            <a type="submit" class="btn btn-primary verify-offline-payment" data-status="1">{{ translate('Yes,_Payment_Received') }}</a>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
+    <!-- Offline payment modal functionality removed -->
 
     <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editArea" id="editArea"
          aria-hidden="true">
@@ -1206,10 +971,7 @@
     <script>
         "use strict";
 
-        $('.assign-deliveryman').click(function() {
-            var deliveryManId = $(this).attr('id');
-            addDeliveryMan(deliveryManId);
-        });
+        // Delivery man functionality removed
 
         $('.change-payment-status').on('click', function(){
             let id = $(this).data('id');
@@ -1231,22 +993,7 @@
             predefined_time_input(time);
         });
 
-        $('.verify-offline-payment').click(function() {
-            var status = $(this).data('status');
-            verify_offline_payment(status);
-        });
-
-        $('.offline-payment-status-alert').on('click', function () {
-            Swal.fire({
-                title: '{{translate("Payment_is_Not_Verified")}}',
-                text: '{{ translate("You can not change status of unverified offline payment") }}',
-                type: 'question',
-                showCancelButton: true,
-                showConfirmButton: false,
-                cancelButtonColor: 'default',
-                confirmButtonColor: '#01684b',
-                cancelButtonText: '{{translate("Close")}}',
-                confirmButtonText: '',
+        // Offline payment functionality removed
                 reverseButtons: true
             }).then((result) => {
                 $('#payment_status_switch').prop('checked', false);
@@ -1270,35 +1017,7 @@
             })
         })
 
-        function addDeliveryMan(id) {
-            $.ajax({
-                type: "GET",
-                url: '{{url('/')}}/admin/orders/add-delivery-man/{{$order['id']}}/' + id,
-                data: $('#product_form').serialize(),
-                success: function (data) {
-                    if(data.status == true) {
-                        toastr.success('{{translate("Delivery man successfully assigned/changed")}}', {
-                            CloseButton: true,
-                            ProgressBar: true
-                        });
-                        setTimeout(function () {
-                            location.reload();
-                        }, 2000)
-                    }else{
-                        toastr.error('{{translate("Deliveryman man can not assign/change in that status")}}', {
-                            CloseButton: true,
-                            ProgressBar: true
-                        });
-                    }
-                },
-                error: function () {
-                    toastr.error('{{translate("Add valid data")}}', {
-                        CloseButton: true,
-                        ProgressBar: true
-                    });
-                }
-            });
-        }
+        // Delivery man functionality removed
 
         function last_location_view() {
             toastr.warning('{{translate("Only available when order is out for delivery!")}}', {
@@ -1350,41 +1069,11 @@
             });
         }
 
-        function verify_offline_payment(status) {
-            $.ajax({
-                type: "GET",
-                url: '{{url('/')}}/admin/orders/verify-offline-payment/{{$order['id']}}/' + status,
-                success: function (data) {
-                    if(data.status == true) {
-                        toastr.success('{{ translate("offline payment verify status changed") }}', {
-                            CloseButton: true,
-                            ProgressBar: true
-                        });
-                    }else{
-                        if(data.type == 'canceled'){
-                            toastr.error(data.message, {
-                                CloseButton: true,
-                                ProgressBar: true
-                            });
-                        }else {
-                            toastr.error('{{ translate("offline payment verify status not changed") }}', {
-                                CloseButton: true,
-                                ProgressBar: true
-                            });
-                        }
-                    }
-                    setTimeout(function () {
-                        location.reload();
-                    }, 2000);
-                },
-                error: function () {
-                }
-            });
-        }
+        // Offline payment verification functionality removed
 
 
     </script>
-    @if($order['order_type'] != 'pos' && $order['order_type'] != 'take_away' && ($order['order_status'] != DELIVERED && $order['order_status'] != RETURNED && $order['order_status'] != CANCELED && $order['order_status'] != FAILED && $order['order_status'] != COMPLETED))
+    @if($order['order_type'] != 'pos' && $order['order_type'] != 'take_away' && !in_array($order['order_status'], ['delivered', 'returned', 'canceled', 'failed', 'completed']))
         <script>
             "use strict";
 

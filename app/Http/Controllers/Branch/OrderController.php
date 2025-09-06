@@ -12,7 +12,7 @@ use App\Model\CustomerAddress;
 use App\Model\DeliveryHistory;
 use App\Model\Order;
 use App\Models\DeliveryChargeByArea;
-use App\Models\OfflinePayment;
+// Offline payment functionality removed
 use App\Models\OrderArea;
 use App\Models\OrderPartialPayment;
 use App\Models\ReferralCustomer;
@@ -210,15 +210,12 @@ class OrderController extends Controller
             return back();
         }
 
-        if ($request->order_status == 'delivered' && $order['transaction_reference'] == null && !in_array($order['payment_method'], ['cash_on_delivery', 'wallet_payment', 'offline_payment'])) {
+        if ($request->order_status == 'delivered' && $order['transaction_reference'] == null && !in_array($order['payment_method'], ['cash_on_delivery'])) {
             Toastr::warning(translate('add_your_payment_reference_first'));
             return back();
         }
 
-        if (($request->order_status == 'delivered' || $request->order_status == 'out_for_delivery') && $order['delivery_man_id'] == null && $order['order_type'] != 'take_away') {
-            Toastr::warning(translate('Please assign delivery man first!'));
-            return back();
-        }
+        // Delivery man functionality removed
 
         if ($request->order_status == 'completed' && $order->payment_status != 'paid') {
             Toastr::warning(translate('Please update payment status first!'));
@@ -227,7 +224,7 @@ class OrderController extends Controller
 
         if ($request->order_status == 'delivered') {
             if ($order->is_guest == 0){
-                if ($order->user_id) CustomerLogic::create_loyalty_point_transaction($order->user_id, $order->id, $order->order_amount, 'order_place');
+                // Loyalty point functionality removed
 
                 if ($order->transaction == null) {
                     $ol = OrderLogic::create_transaction($order, 'admin');
@@ -242,9 +239,7 @@ class OrderController extends Controller
                         $referralEarningAmount = $referralData->ref_by_earning_amount ?? 0;
                         $referredByUser = $this->user->find($user->refer_by);
 
-                        if ($referralEarningAmount > 0 && $referredByUser){
-                            CustomerLogic::referral_earning_wallet_transaction($order->user_id, 'referral_order_place', $referredByUser->id, $referralEarningAmount);
-                        }
+                        // Wallet functionality removed
                         ReferralCustomer::where('user_id', $order->user_id)->update(['is_used_by_refer' => 1]);
                     }
                 }
@@ -269,41 +264,17 @@ class OrderController extends Controller
         }
         $order->save();
 
-        if ($request->order_status == 'out_for_delivery' && $order->delivery_man_id != null) {
-            DeliveryHistory::updateOrInsert(
-                [
-                    'order_id' => $order->id,
-                    'deliveryman_id' => $order->delivery_man_id,
-                ],
-                [
-                    'latitude' => $order?->branch?->latitude,
-                    'longitude' => $order?->branch?->longitude,
-                    'time' => now(),
-                    'location' => $order?->branch?->address,
-                    'updated_at' => now()
-                ]
-            );
-        }
+        // Delivery man functionality removed
 
         $message = Helpers::order_status_update_message($request->order_status);
         $restaurantName = Helpers::get_business_settings('restaurant_name');
-        $deliverymanName = $order->delivery_man ? $order->delivery_man->f_name. ' '. $order->delivery_man->l_name : '';
+        $deliverymanName = ''; // Delivery man functionality removed
         $customerName = $order->is_guest == 0 ? ($order->customer ? $order->customer->f_name. ' '. $order->customer->l_name : '') : 'Guest User';
         $local = $order->is_guest == 0 ? ($order->customer ? $order->customer->language_code : 'en') : 'en';
 
-        if ($local != 'en'){
-            $statusKey = Helpers::order_status_message_key($request->order_status);
-            $translatedMessage = $this->business_setting->with('translations')->where(['key' => $statusKey])->first();
-            if (isset($translatedMessage->translations)){
-                foreach ($translatedMessage->translations as $translation){
-                    if ($local == $translation->locale){
-                        $message = $translation->value;
-                    }
-                }
-            }
-        }
+        // Translation functionality removed - always use English
 
-        $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName, delivery_man_name: $deliverymanName, order_id: $order->id);
+        $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName, order_id: $order->id);
 
         $customerFcmToken = null;
         if($order->is_guest == 0){
@@ -327,54 +298,11 @@ class OrderController extends Controller
             }
 
         } catch (\Exception $e) {
-            Toastr::warning(translate('Push notification failed for Customer!'));
+            // Notification functionality removed
         }
 
-        //delivery man notification
-        if ($request->order_status == 'processing' || $request->order_status == 'out_for_delivery') {
-
-            if (isset($order->delivery_man)) {
-                $deliverymanFcmToken = $order->delivery_man->fcm_token;
-            }
-
-            $value = translate('One of your order is on processing');
-            $outForDeliveryValue = translate('One of your order is out for delivery');
-            try {
-                if ($value) {
-                    $data = [
-                        'title' => translate('Order'),
-                        'description' => $request->order_status == 'processing' ? $value : $outForDeliveryValue,
-                        'order_id' => $order['id'],
-                        'image' => '',
-                        'type' => 'order_status',
-                    ];
-                    if (isset($deliverymanFcmToken)) {
-                        Helpers::send_push_notif_to_device(fcm_token: $deliverymanFcmToken, data: $data);
-                    }
-
-                }
-            } catch (\Exception $e) {
-                Toastr::warning(translate('Push notification failed for DeliveryMan!'));
-            }
-        }
-
-        //kitchen order notification
-        if ($request->order_status == 'confirmed') {
-            $data = [
-                'title' => translate('You have a new order - (Order Confirmed).'),
-                'description' => $order->id,
-                'order_id' => $order->id,
-                'order_status' => $order->order_status,
-                'image' => '',
-            ];
-
-            try {
-                Helpers::send_push_notif_to_topic(data: $data, topic: "kitchen-{$order->branch_id}", type: 'general', isNotificationPayloadRemove: true);
-
-            } catch (\Exception $e) {
-                Toastr::warning(translate('Push notification failed!'));
-            }
-        }
+        // Delivery man functionality removed
+        // Notification functionality removed
 
         Toastr::success(translate('Order status updated!'));
         return back();
@@ -439,54 +367,14 @@ class OrderController extends Controller
             }
 
         } catch (\Exception $e) {
-            Toastr::warning(translate('Push notification send failed for Customer!'));
+            // Notification functionality removed
         }
 
         Toastr::success(translate('Order preparation time increased'));
         return back();
     }
 
-    /**
-     * @param $order_id
-     * @param $delivery_man_id
-     * @return JsonResponse
-     */
-    public function addDeliveryman($order_id, $delivery_man_id): JsonResponse
-    {
-        if ($delivery_man_id == 0) {
-            return response()->json([], 401);
-        }
-        $order = $this->order->where(['id' => $order_id, 'branch_id' => auth('branch')->id()])->first();
-        if ($order->order_status == 'pending' || $order->order_status == 'delivered' || $order->order_status == 'returned' || $order->order_status == 'failed' || $order->order_status == 'canceled' || $order->order_status == 'scheduled') {
-            return response()->json(['status' => false], 200);
-        }
-        $order->delivery_man_id = $delivery_man_id;
-        $order->save();
-
-        $deliverymanFcmToken = $order->delivery_man->fcm_token;
-        $customerFcmToken = null;
-        if (isset($order->customer)) {
-            $customerFcmToken = $order->customer->cm_firebase_token;
-        }
-        $value = Helpers::order_status_update_message('del_assign');
-        try {
-            if ($value) {
-                $data = [
-                    'title' => translate('Order'),
-                    'description' => $value,
-                    'order_id' => $order['id'],
-                    'image' => '',
-                    'type' => 'order_status',
-                ];
-                Helpers::send_push_notif_to_device(fcm_token: $deliverymanFcmToken, data: $data, isDeliverymanAssigned: true);
-            }
-        } catch (\Exception $e) {
-            Toastr::warning(translate('Push notification failed for DeliveryMan!'));
-        }
-
-        Toastr::success(translate('Order deliveryman added!'));
-        return response()->json(['status' => true], 200);
-    }
+    // Delivery man functionality removed
 
     /**
      * @param Request $request
@@ -495,7 +383,7 @@ class OrderController extends Controller
     public function paymentStatus(Request $request): RedirectResponse
     {
         $order = $this->order->where(['id' => $request->id, 'branch_id' => auth('branch')->id()])->first();
-        if ($request->payment_status == 'paid' && $order['transaction_reference'] == null && $order['payment_method'] != 'cash_on_delivery' && $order['order_type'] != 'dine_in' && !in_array($order['payment_method'], ['cash_on_delivery', 'wallet_payment', 'offline_payment', 'cash'])) {
+        if ($request->payment_status == 'paid' && $order['transaction_reference'] == null && $order['payment_method'] != 'cash_on_delivery' && $order['order_type'] != 'dine_in' && !in_array($order['payment_method'], ['cash_on_delivery', 'cash'])) {
             Toastr::warning(translate('Add your payment reference code first!'));
             return back();
         }
@@ -612,145 +500,15 @@ class OrderController extends Controller
      * @param $status
      * @return Application|Factory|View
      */
-    public function offlineOrderList(Request $request, $status): Factory|View|Application
-    {
-        $search = $request['search'];
-        $statusMapping = [
-            'pending' => 0,
-            'denied' => 2,
-        ];
-
-        $status = $statusMapping[$status];
-
-        $orders = $this->order->with(['offline_payment'])
-            ->where(['branch_id' => auth('branch')->id(), 'payment_method' => 'offline_payment'])
-            ->whereHas('offline_payment', function ($query) use($status){
-                $query->where('status', $status);
-            })
-            ->when($request->has('search'), function ($query) use ($request) {
-                $keys = explode(' ', $request['search']);
-                return $query->where(function ($query) use ($keys) {
-                    foreach ($keys as $key) {
-                        $query->where('id', 'LIKE', '%' . $key . '%')
-                            ->orWhere('order_status', 'LIKE', "%{$key}%")
-                            ->orWhere('payment_status', 'LIKE', "{$key}%");
-                    }
-                });
-            })
-            ->latest()
-            ->paginate(Helpers::getPagination());
-
-        return view('branch-views.order.offline-payment.list', compact('orders', 'search'));
-    }
+    // Offline payment functionality removed
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function offlineViewDetails(Request $request): JsonResponse
-    {
-        $order = $this->order->find($request->id);
+    // Offline payment functionality removed
 
-        return response()->json([
-            'view' => view('branch-views.order.offline-payment.details-quick-view', compact('order'))->render(),
-        ]);
-    }
-
-    /**
-     * @param $order_id
-     * @param $status
-     * @return JsonResponse
-     */
-    public function verifyOfflinePayment($order_id, $status): JsonResponse
-    {
-        $offlineData = OfflinePayment::where(['order_id' => $order_id])->first();
-        if (!isset($offlineData)){
-            return response()->json(['status' => false], 200);
-        }
-
-        $order = Order::find($order_id);
-        if (!isset($order)){
-            return response()->json(['status' => false], 200);
-        }
-
-        if ($order->order_status == 'canceled'){
-            return response()->json(['status' => false, 'type' => 'canceled', 'message' => translate('Can not change the offline status when order status is canceled')], 200);
-        }
-
-        $offlineData->status = $status;
-        $offlineData->save();
-
-        if ($offlineData->status == 1){
-            $order->order_status = 'confirmed';
-            $order->payment_status = 'paid';
-            $order->save();
-
-            $message = Helpers::order_status_update_message('confirmed');
-            $local = $order->is_guest == 0 ? ($order->customer ? $order->customer->language_code : 'en') : 'en';;
-
-            if ($local != 'en'){
-                $statusKey = Helpers::order_status_message_key('confirmed');
-                $translatedMessage = $this->business_setting->with('translations')->where(['key' => $statusKey])->first();
-                if (isset($translatedMessage->translations)){
-                    foreach ($translatedMessage->translations as $translation){
-                        if ($local == $translation->locale){
-                            $message = $translation->value;
-                        }
-                    }
-                }
-            }
-            $restaurantName = Helpers::get_business_settings('restaurant_name');
-            $deliverymanName = $order->delivery_man ? $order->delivery_man->f_name. ' '. $order->delivery_man->l_name : '';
-            $customerName = $order->is_guest == 0 ? ($order->customer ? $order->customer->f_name. ' '. $order->customer->l_name : '') : '';
-
-            $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName, delivery_man_name: $deliverymanName, order_id: $order->id);
-
-            $customerFcmToken = null;
-            if($order->is_guest == 0){
-                $customerFcmToken = $order->customer ? $order->customer->cm_firebase_token : null;
-            }elseif($order->is_guest == 1){
-                $customerFcmToken = $order->guest ? $order->guest->fcm_token : null;
-            }
-
-            try {
-                if ($value && $customerFcmToken != null) {
-                    $data = [
-                        'title' => translate('Order'),
-                        'description' => $value,
-                        'order_id' => $order['id'],
-                        'image' => '',
-                        'type' => 'order_status',
-                    ];
-                    Helpers::send_push_notif_to_device($customerFcmToken, $data);
-                }
-            } catch (\Exception $e) {
-                //
-            }
-
-        }elseif ($offlineData->status == 2){
-            $customerFcmToken = null;
-            if($order->is_guest == 0){
-                $customerFcmToken = $order->customer ? $order->customer->cm_firebase_token : null;
-            }elseif($order->is_guest == 1){
-                $customerFcmToken = $order->guest ? $order->guest->fcm_token : null;
-            }
-            if ($customerFcmToken != null) {
-                try {
-                    $data = [
-                        'title' => translate('Order'),
-                        'description' => translate('Offline payment is not verified'),
-                        'order_id' => $order->id,
-                        'image' => '',
-                        'type' => 'order',
-                    ];
-                    Helpers::send_push_notif_to_device($customerFcmToken, $data);
-                } catch (\Exception $e) {
-                }
-            }
-
-        }
-        return response()->json(['status' => true], 200);
-    }
+    // Offline payment functionality removed
 
     public function updateOrderDeliveryArea(Request $request, $order_id)
     {

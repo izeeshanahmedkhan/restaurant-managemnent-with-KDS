@@ -18,10 +18,7 @@ class Category extends Model
         'priority' => 'integer'
     ];
 
-    public function translations(): MorphMany
-    {
-        return $this->morphMany('App\Model\Translation', 'translationable');
-    }
+    // Translation functionality removed
 
     public function scopeActive($query)
     {
@@ -43,7 +40,7 @@ class Category extends Model
         if (auth('admin')->check() || auth('branch')->check()) {
             return $name;
         }
-        return $this->translations[0]->value ?? $name;
+        return $name; // Translation functionality removed
     }
 
     public function getImageFullPathAttribute(): string
@@ -68,12 +65,5 @@ class Category extends Model
         return $path;
     }
 
-    protected static function booted()
-    {
-        static::addGlobalScope('translate', function (Builder $builder) {
-            $builder->with(['translations' => function ($query) {
-                return $query->where('locale', app()->getLocale());
-            }]);
-        });
-    }
+    // Translation functionality removed
 }

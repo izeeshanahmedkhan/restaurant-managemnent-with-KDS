@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Model\BusinessSetting;
 use App\Model\CustomerAddress;
 use App\Model\EmailVerifications;
-use App\Model\Newsletter;
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\PhoneVerification;
@@ -29,7 +28,6 @@ class CustomerController extends Controller
         private CustomerAddress  $customerAddress,
         private User             $user,
         private PointTransitions $pointTransitions,
-        private Newsletter       $newsletter,
         private GuestUser        $guestUser,
         private Order            $order,
         private PhoneVerification  $phoneVerification,
@@ -322,32 +320,6 @@ class CustomerController extends Controller
         return response()->json($this->pointTransitions->latest()->where(['user_id' => auth('api')->user()->id])->get(), 200);
     }
 
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function subscribeNewsletter(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
-        }
-
-        $newsLetter = $this->newsletter->where('email', $request->email)->first();
-        if (!isset($newsLetter)) {
-            $newsLetter = $this->newsletter;
-            $newsLetter->email = $request->email;
-            $newsLetter->save();
-
-            return response()->json(['message' => translate('Successfully subscribed')], 200);
-
-        } else {
-            return response()->json(['message' => translate('Email Already exists')], 400);
-        }
-    }
 
     /**
      * @return JsonResponse

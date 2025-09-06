@@ -2,7 +2,7 @@
 
 namespace App\Model;
 
-use App\Models\OfflinePayment;
+// Offline payment functionality removed
 use App\Models\GuestUser;
 use App\Models\OrderChangeAmount;
 use App\Models\OrderPartialPayment;
@@ -17,20 +17,14 @@ class Order extends Model
 {
     protected $casts = [
         'order_amount' => 'float',
-        'coupon_discount_amount' => 'float',
         'total_tax_amount' => 'float',
         'total_add_on_tax' => 'float',
         'delivery_address_id' => 'integer',
-        'delivery_man_id' => 'integer',
         'delivery_charge' => 'float',
         'user_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'delivery_address' => 'array',
-        'table_id' => 'integer',
-        'number_of_people' => 'integer',
-        'table_order_id' => 'integer',
-        'is_cutlery_required' => 'integer',
         'bring_change_amount' => 'float',
         'referral_discount' => 'float',
     ];
@@ -40,10 +34,6 @@ class Order extends Model
         return $this->hasMany(OrderDetail::class);
     }
 
-    public function delivery_man(): BelongsTo
-    {
-        return $this->belongsTo(DeliveryMan::class, 'delivery_man_id')->withCount('orders');
-    }
 
     public function customer(): BelongsTo
     {
@@ -65,15 +55,6 @@ class Order extends Model
         return $this->belongsTo(CustomerAddress::class, 'delivery_address_id');
     }
 
-    public function table_order(): BelongsTo
-    {
-        return $this->belongsTo(TableOrder::class, 'table_order_id', 'id');
-    }
-
-    public function table(): BelongsTo
-    {
-        return $this->belongsTo(Table::class, 'table_id', 'id');
-    }
 
     public function scopePos($query)
     {
@@ -121,10 +102,7 @@ class Order extends Model
         return $this->hasMany(OrderPartialPayment::class)->orderBy('id', 'DESC');
     }
 
-    public function offline_payment()
-    {
-        return $this->hasOne(OfflinePayment::class, 'order_id');
-    }
+    // Offline payment functionality removed
 
     public function scopePartial($query)
     {
@@ -136,10 +114,6 @@ class Order extends Model
         return $this->belongsTo(GuestUser::class, 'user_id');
     }
 
-    public function deliveryman_review()
-    {
-        return $this->hasOne(DMReview::class, 'order_id');
-    }
 
     public function order_area()
     {

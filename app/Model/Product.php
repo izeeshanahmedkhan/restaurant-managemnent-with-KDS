@@ -3,8 +3,6 @@
 namespace App\Model;
 
 use App\CentralLogics\Helpers;
-use App\Models\CuisineProduct;
-use App\Models\Cuisine;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -39,10 +37,7 @@ class Product extends Model
         return (float)Helpers::set_price($discount);
     }
 
-    public function translations(): MorphMany
-    {
-        return $this->morphMany('App\Model\Translation', 'translationable');
-    }
+    // Translation functionality removed
 
     public function scopeActive($query)
     {
@@ -63,17 +58,7 @@ class Product extends Model
         }
     }
 
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(Review::class)->latest();
-    }
-
-    public function rating(): HasMany
-    {
-        return $this->hasMany(Review::class)
-            ->select(DB::raw('avg(rating) average, product_id'))
-            ->groupBy('product_id');
-    }
+    // Review functionality removed
 
     public function wishlist(): HasMany
     {
@@ -116,10 +101,6 @@ class Product extends Model
         return $this->hasOne(ProductByBranch::class)->where(['branch_id' => auth('branch')->id()]);
     }
 
-    public function cuisines(): BelongsToMany
-    {
-        return $this->belongsToMany(Cuisine::class, 'cuisine_product', 'product_id', 'cuisine_id');
-    }
 
     public function b_product()
     {
@@ -175,13 +156,6 @@ class Product extends Model
         return null;
     }
 
-    protected static function booted(): void
-    {
-        static::addGlobalScope('translate', function (Builder $builder) {
-            $builder->with(['translations' => function ($query) {
-                return $query->where('locale', app()->getLocale());
-            }]);
-        });
-    }
+    // Translation functionality removed
 
 }

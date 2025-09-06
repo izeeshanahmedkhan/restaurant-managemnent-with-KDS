@@ -7,7 +7,7 @@
 
     @php($icon = \App\Model\BusinessSetting::where(['key' => 'fav_icon'])->first()?->value??'')
     <link rel="shortcut icon" href="">
-    <link rel="icon" type="image/x-icon" href="{{ asset('storage/app/restaurant/' . $icon ?? '') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('storage/restaurant/' . $icon ?? '') }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('assets/admin')}}/css/vendor.min.css">
@@ -156,7 +156,7 @@
         function copy_cred() {
             $('#signinSrEmail').val('admin@admin.com');
             $('#signupSrPassword').val('12345678');
-            toastr.success('{{\App\CentralLogics\translate("Copied successfully!")}}', 'Success!', {
+            toastr.success('{{translate("Copied successfully!")}}', 'Success!', {
                 CloseButton: true,
                 ProgressBar: true
             });

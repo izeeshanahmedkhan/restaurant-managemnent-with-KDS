@@ -105,10 +105,7 @@ return [
             'model' => \App\Model\Branch::class,
         ],
 
-        'delivery_men' => [
-            'driver' => 'eloquent',
-            'model' => \App\Model\DeliveryMan::class,
-        ],
+        // Delivery man functionality removed
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',

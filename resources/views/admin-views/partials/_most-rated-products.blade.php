@@ -1,6 +1,6 @@
 <div class="card-header d-flex justify-content-between gap-10">
     <h5 class="mb-0">{{translate('Most_Rated_Products')}}</h5>
-    <a href="{{route('admin.reviews.list')}}" class="btn-link">{{translate('View_All')}}</a>
+    <!-- Review functionality removed -->
 </div>
 
 <div class="card-body">
@@ -18,9 +18,8 @@
                         </span>
                     </div>
                     <div>
-                        <span class="rating text-primary"><i class="tio-star"></i></span>
-                        <span>{{ $avgRating = count($product->rating)>0?number_format($product->rating[0]->average, 2, '.', ' '):0 }} </span>
-                        ({{$item['total']}})
+                        <!-- Review functionality removed -->
+                        <span class="text-muted">{{translate('No ratings available')}}</span>
                     </div>
                 </a>
             @endif

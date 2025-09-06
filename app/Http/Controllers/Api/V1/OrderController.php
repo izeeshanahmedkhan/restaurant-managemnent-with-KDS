@@ -10,13 +10,13 @@ use App\Model\AddOn;
 use App\Model\Branch;
 use App\Model\BusinessSetting;
 use App\Model\CustomerAddress;
-use App\Model\DMReview;
+// DMReview functionality removed
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\Product;
 use App\Model\ProductByBranch;
 use App\Models\GuestUser;
-use App\Models\OfflinePayment;
+// Offline payment functionality removed
 use App\Models\OrderPartialPayment;
 use App\Models\OrderArea;
 use App\Models\ReferralCustomer;
@@ -38,7 +38,7 @@ class OrderController extends Controller
         private OrderDetail     $order_detail,
         private ProductByBranch $product_by_branch,
         private Product         $product,
-        private OfflinePayment  $offlinePayment,
+        // Offline payment functionality removed
         private BusinessSetting $business_setting,
         private OrderArea $orderArea,
         private ReferralCustomer $referralCustomer,
@@ -107,26 +107,7 @@ class OrderController extends Controller
             $customer = $this->user->find(auth('api')->user()->id);
         }
 
-        if ($request->payment_method == 'wallet_payment') {
-            if (Helpers::get_business_settings('wallet_status') != 1){
-                return response()->json(['errors' => [['code' => 'payment_method', 'message' => translate('customer_wallet_status_is_disable')]]], 403);
-            }
-            if (isset($customer) && $customer->wallet_balance < $request['order_amount']) {
-                return response()->json(['errors' => [['code' => 'payment_method', 'message' => translate('you_do_not_have_sufficient_balance_in_wallet')]]], 403);
-            }
-        }
-
-        if ($request['is_partial'] == 1) {
-            if (Helpers::get_business_settings('wallet_status') != 1){
-                return response()->json(['errors' => [['code' => 'payment_method', 'message' => translate('customer_wallet_status_is_disable')]]], 403);
-            }
-            if (isset($customer) && $customer->wallet_balance > $request['order_amount']){
-                return response()->json(['errors' => [['code' => 'payment_method', 'message' => translate('since your wallet balance is more than order amount, you can not place partial order')]]], 403);
-            }
-            if (isset($customer) && $customer->wallet_balance < 1){
-                return response()->json(['errors' => [['code' => 'payment_method', 'message' => translate('since your wallet balance is less than 1, you can not place partial order')]]], 403);
-            }
-        }
+        // Wallet payment functionality removed
 
        // $preparation_time = Helpers::get_business_settings('default_preparation_time') ?? 0;
         $preparation_time = Branch::where(['id' => $request['branch_id']])->first()->preparation_time ?? 0;
@@ -143,12 +124,12 @@ class OrderController extends Controller
         $userType = (bool)auth('api')->user() ? 0 : 1;
 
         if ($request->is_partial == 1) {
-            $paymentStatus = ($request->payment_method == 'cash_on_delivery' || $request->payment_method == 'offline_payment') ? 'partial_paid' : 'paid';
+            $paymentStatus = ($request->payment_method == 'cash_on_delivery') ? 'partial_paid' : 'paid';
         } else {
-            $paymentStatus = ($request->payment_method == 'cash_on_delivery' || $request->payment_method == 'offline_payment') ? 'unpaid' : 'paid';
+            $paymentStatus = ($request->payment_method == 'cash_on_delivery') ? 'unpaid' : 'paid';
         }
 
-        $orderStatus = ($request->payment_method == 'cash_on_delivery' || $request->payment_method == 'offline_payment') ? 'pending' : 'confirmed';
+        $orderStatus = ($request->payment_method == 'cash_on_delivery') ? 'pending' : 'confirmed';
 
         if ($request['order_type'] == 'take_away'){
             $deliveryCharge = 0;
@@ -166,11 +147,8 @@ class OrderController extends Controller
                 'user_id' => $userId,
                 'is_guest' => $userType,
                 'order_amount' => Helpers::set_price($request['order_amount']),
-                'coupon_discount_amount' => Helpers::set_price($request->coupon_discount_amount),
-                'coupon_discount_title' => $request->coupon_discount_title == 0 ? null : 'coupon_discount_title',
                 'payment_status' => $paymentStatus,
                 'order_status' => $orderStatus,
-                'coupon_code' => $request['coupon_code'],
                 'payment_method' => $request->payment_method,
                 'transaction_reference' => $request->transaction_reference ?? null,
                 'order_note' => $request['order_note'],
@@ -186,7 +164,6 @@ class OrderController extends Controller
                         : null),
                 'delivery_charge' => $deliveryCharge,
                 'preparation_time' => 0,
-                'is_cutlery_required' => $request['is_cutlery_required'] ?? 0,
                 'bring_change_amount' => $request->payment_method != 'cash_on_delivery' ? 0 : ($request->bring_change_amount != null ? $request->bring_change_amount : 0),
                 'created_at' => now(),
                 'updated_at' => now()
@@ -312,7 +289,7 @@ class OrderController extends Controller
                 }
             }
 
-            $extraDiscountValidationAmount = $totalProductPrice + $totalAddonPrice - $totalDiscountOnProduct - ($request['coupon_discount_amount'] ?? 0);
+            $extraDiscountValidationAmount = $totalProductPrice + $totalAddonPrice - $totalDiscountOnProduct;
 
             // Calculate referral first order discount
             $referralDiscount = 0;
@@ -329,41 +306,11 @@ class OrderController extends Controller
 
             $o_id = $this->order->insertGetId($or);
 
-            if ($request->payment_method == 'wallet_payment') {
-                $amount = $or['order_amount'] + $or['delivery_charge'];
-                CustomerLogic::create_wallet_transaction($or['user_id'], $amount, 'order_place', $or['id']);
-            }
+            // Wallet payment functionality removed
 
-            if ($request->payment_method == 'offline_payment') {
-                $offlinePayment = $this->offlinePayment;
-                $offlinePayment->order_id = $or['id'];
-                $offlinePayment->payment_info = json_encode($request['payment_info']);
-                $offlinePayment->save();
-            }
+            // Offline payment functionality removed
 
-            if ($request['is_partial'] == 1){
-                $totalOrderAmount = $or['order_amount'] + $or['delivery_charge'];
-                $walletAmount = $customer->wallet_balance;
-                $dueAmount = $totalOrderAmount - $walletAmount;
-
-                $walletTransaction = CustomerLogic::create_wallet_transaction($or['user_id'], $walletAmount, 'order_place', $or['id']);
-
-                $partial = new OrderPartialPayment;
-                $partial->order_id = $or['id'];
-                $partial->paid_with = 'wallet_payment';
-                $partial->paid_amount = $walletAmount;
-                $partial->due_amount = $dueAmount;
-                $partial->save();
-
-                if ($request['payment_method'] != 'cash_on_delivery'){
-                    $partial = new OrderPartialPayment;
-                    $partial->order_id = $or['id'];
-                    $partial->paid_with = $request['payment_method'];
-                    $partial->paid_amount = $dueAmount;
-                    $partial->due_amount = 0;
-                    $partial->save();
-                }
-            }
+            // Partial payment functionality removed (wallet-based)
 
             if($request['selected_delivery_area']){
                 $orderArea = $this->orderArea;
@@ -381,7 +328,7 @@ class OrderController extends Controller
 
                     $refer_user = $this->user->where(['id' => $registeredCustomer?->refer_by])->first();
                     if (isset($refer_user) && $referralDiscount > 0){
-                        $this->sendNotificationToReferralUser(referredUser: $refer_user);
+                        // Referral notification functionality removed
                     }
                 }
             }
@@ -402,43 +349,7 @@ class OrderController extends Controller
         }
     }
 
-    public function sendNotificationToReferralUser($referredUser)
-    {
-        $message = Helpers::order_status_update_message('referral_code_user_first_order_place_message');
-        $restaurantName = Helpers::get_business_settings('restaurant_name');
-        $customerName = ($referredUser->f_name ?? '') . ' ' . ($referredUser->l_name ?? '');
-        $local = $referredUser->language_code ?? 'en';
-
-        if ($local != 'en'){
-            $translatedMessage = BusinessSetting::with('translations')->where(['key' => 'referral_code_user_first_order_place_message'])->first();
-            if (isset($translatedMessage->translations)){
-                foreach ($translatedMessage->translations as $translation){
-                    if ($local == $translation->locale){
-                        $message = $translation->value;
-                    }
-                }
-            }
-        }
-
-        $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName);
-        $customerFcmToken = $referredUser->cm_firebase_token ?? null;
-
-        if ($value && isset($customerFcmToken)) {
-            $data = [
-                'title' => translate('Referral code user First order place'),
-                'description' => $value,
-                'order_id' => '',
-                'image' => '',
-                'type' => 'referral',
-            ];
-
-            try {
-                Helpers::send_push_notif_to_device($customerFcmToken, $data);
-            }catch (\Exception $e) {
-                //
-            }
-        }
-    }
+    // Referral notification functionality removed
 
     private function orderEmailAndNotification($request, $or, $order_id)
     {
@@ -455,17 +366,7 @@ class OrderController extends Controller
 
         $message = Helpers::order_status_update_message($or['order_status']);
 
-        if ($local != 'en'){
-            $statusKey = Helpers::order_status_message_key($or['order_status']);
-            $translatedMessage = $this->business_setting->with('translations')->where(['key' => $statusKey])->first();
-            if (isset($translatedMessage->translations)){
-                foreach ($translatedMessage->translations as $translation){
-                    if ($local == $translation->locale){
-                        $message = $translation->value;
-                    }
-                }
-            }
-        }
+        // Translation functionality removed - always use English
         $restaurantName = Helpers::get_business_settings('restaurant_name');
         $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName,  order_id: $order_id);
 
@@ -537,7 +438,7 @@ class OrderController extends Controller
         $userType = (bool)auth('api')->user() ? 0 : 1;
         $orderFilter = $request->order_filter;
 
-        $orders = $this->order->with(['customer', 'delivery_man.rating'])
+        $orders = $this->order->with(['customer'])
             ->withCount('details')
             ->withCount(['details as total_quantity' => function($query) {
                 $query->select(DB::raw('sum(quantity)'));
@@ -554,7 +455,7 @@ class OrderController extends Controller
 
 
         $orders->map(function ($data) {
-            $data['deliveryman_review_count'] = DMReview::where(['delivery_man_id' => $data['delivery_man_id'], 'order_id' => $data['id']])->count();
+            // Delivery man functionality removed
 
             $order_id = $data->id;
             $order_details = $this->order_detail->where('order_id', $order_id)->first();
@@ -602,12 +503,8 @@ class OrderController extends Controller
         $userId = (bool)auth('api')->user() ? auth('api')->user()->id : $request['guest_id'];
         $userType = (bool)auth('api')->user() ? 0 : 1;
 
-        $details = $this->order_detail->with(['order',
-            'order.delivery_man' => function ($query) {
-                $query->select('id', 'f_name', 'l_name', 'phone', 'email', 'image', 'branch_id', 'is_active');
-            },
-            'order.delivery_man.rating', 'order.delivery_address', 'order.order_partial_payments' , 'order.offline_payment', 'order.deliveryman_review'])
-            ->withCount(['reviews'])
+        $details = $this->order_detail->with(['order', 'order.delivery_address', 'order.order_partial_payments'])
+            // Review functionality removed
             ->where(['order_id' => $request['order_id']])
             ->whereHas('order', function ($q) use ($userId, $userType){
                 $q->where([ 'user_id' => $userId, 'is_guest' => $userType ]);
@@ -748,7 +645,7 @@ class OrderController extends Controller
             'order.customer',
             'order.order_partial_payments'
         ])
-            ->withCount(['reviews'])
+            // Review functionality removed
             ->where(['order_id' => $request['order_id']])
             ->where(function ($query) use ($phone) {
                 $query->where(function ($subQuery) use ($phone) {

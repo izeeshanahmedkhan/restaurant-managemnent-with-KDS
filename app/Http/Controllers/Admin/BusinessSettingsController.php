@@ -20,9 +20,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Contracts\Support\Renderable;
-use App\Models\Setting;
+// Setting model removed
 use Illuminate\Support\Facades\Validator;
-use App\Model\Translation;
+// Translation model removed
 use Illuminate\Validation\ValidationException;
 
 
@@ -96,9 +96,7 @@ class BusinessSettingsController extends Controller
         if ($request->has('delivery')) {
             $request['delivery'] = 1;
         }
-        if ($request->has('dm_self_registration')) {
-            $request['dm_self_registration'] = 1;
-        }
+        // Delivery man functionality removed
         if ($request->has('toggle_veg_non_veg')) {
             $request['toggle_veg_non_veg'] = 1;
         }
@@ -112,9 +110,9 @@ class BusinessSettingsController extends Controller
         }
 
         $request['guest_checkout'] = $request->has('guest_checkout') ? 1 : 0;
-        $request['partial_payment'] = $request->has('partial_payment') ? 1 : 0;
+        // Wallet functionality removed
         $request['google_map_status'] = $request->has('google_map_status') ? 1 : 0;
-        $request['admin_order_notification'] = $request->has('admin_order_notification') ? 1 : 0;
+        // Notification functionality removed
         $request['halal_tag_status'] = $request->has('halal_tag_status') ? 1 : 0;
 
         $this->InsertOrUpdateBusinessData(['key' => 'restaurant_name'], [
@@ -162,9 +160,16 @@ class BusinessSettingsController extends Controller
         ]);
 
         $currentLogo = $this->business_setting->where(['key' => 'logo'])->first();
+        if ($request->hasFile('logo')) {
+            $logoValue = Helpers::update('restaurant/', $currentLogo ? $currentLogo->value : '', 'png', $request->file('logo'));
         $this->InsertOrUpdateBusinessData(['key' => 'logo'], [
-            'value' => $request->has('logo') ? Helpers::update('restaurant/', $currentLogo->value, 'png', $request->file('logo')) : $currentLogo->value
+                'value' => $logoValue
         ]);
+        } elseif ($currentLogo) {
+            $this->InsertOrUpdateBusinessData(['key' => 'logo'], [
+                'value' => $currentLogo->value
+            ]);
+        }
 
         $this->InsertOrUpdateBusinessData(['key' => 'phone'], [
             'value' => $request['phone'],
@@ -203,13 +208,18 @@ class BusinessSettingsController extends Controller
         ]);
 
         $currentFavIcon = $this->business_setting->where(['key' => 'fav_icon'])->first();
+        if ($request->hasFile('fav_icon')) {
+            $faviconValue = Helpers::update('restaurant/', $currentFavIcon ? $currentFavIcon->value : '', 'png', $request->file('fav_icon'));
         $this->InsertOrUpdateBusinessData(['key' => 'fav_icon'], [
-            'value' => $request->has('fav_icon') ? Helpers::update('restaurant/', $currentFavIcon->value, 'png', $request->file('fav_icon')) : $currentFavIcon->value
-        ]);
+                'value' => $faviconValue
+            ]);
+        } elseif ($currentFavIcon) {
+            $this->InsertOrUpdateBusinessData(['key' => 'fav_icon'], [
+                'value' => $currentFavIcon->value
+            ]);
+        }
 
-        $this->InsertOrUpdateBusinessData(['key' => 'dm_self_registration'], [
-            'value' => $request['dm_self_registration'],
-        ]);
+        // Delivery man functionality removed
 
         $this->InsertOrUpdateBusinessData(['key' => 'toggle_veg_non_veg'], [
             'value' => $request['toggle_veg_non_veg'],
@@ -219,13 +229,7 @@ class BusinessSettingsController extends Controller
             'value' => $request['guest_checkout'],
         ]);
 
-        $this->InsertOrUpdateBusinessData(['key' => 'partial_payment'], [
-            'value' => $request['partial_payment'],
-        ]);
-
-        $this->InsertOrUpdateBusinessData(['key' => 'partial_payment_combine_with'], [
-            'value' => $request['partial_payment_combine_with'],
-        ]);
+        // Wallet functionality removed
 
         $this->InsertOrUpdateBusinessData(['key' => 'footer_description_text'], [
             'value' => $request['footer_description_text'],
@@ -235,14 +239,7 @@ class BusinessSettingsController extends Controller
             'value' => $request['google_map_status'],
         ]);
 
-        $this->InsertOrUpdateBusinessData(['key' => 'admin_order_notification'], [
-            'value' => $request['admin_order_notification'],
-        ]);
-
-
-        $this->InsertOrUpdateBusinessData(['key' => 'admin_order_notification_type'], [
-            'value' => $request['admin_order_notification_type'],
-        ]);
+        // Notification functionality removed
 
         $this->InsertOrUpdateBusinessData(['key' => 'halal_tag_status'], [
             'value' => $request['halal_tag_status'],
@@ -255,253 +252,25 @@ class BusinessSettingsController extends Controller
     /**
      * @return Renderable
      */
-    public function mailIndex(): Renderable
-    {
-        return view('admin-views.business-settings.mail-index');
-    }
-
-    /**
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function mailConfig(Request $request): RedirectResponse
-    {
-        $request->has('status') ? $request['status'] = 1 : $request['status'] = 0;
-        $this->InsertOrUpdateBusinessData(['key' => 'mail_config'],[
-            'value' => json_encode([
-                "status" => $request['status'],
-                "name" => $request['name'],
-                "host" => $request['host'],
-                "driver" => $request['driver'],
-                "port" => $request['port'],
-                "username" => $request['username'],
-                "email_id" => $request['email'],
-                "encryption" => $request['encryption'],
-                "password" => $request['password'],
-            ]),
-        ]);
-
-        Toastr::success(translate('Configuration updated successfully!'));
-        return back();
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function mailSend(Request $request): JsonResponse
-    {
-        $response_flag = 0;
-        try {
-            $emailServices = Helpers::get_business_settings('mail_config');
-
-            if (isset($emailServices['status']) && $emailServices['status'] == 1) {
-                Mail::to($request->email)->send(new \App\Mail\TestEmailSender());
-                $response_flag = 1;
-            }
-        } catch (\Exception $exception) {
-            $response_flag = 2;
-        }
-
-        return response()->json(['success' => $response_flag]);
-    }
+    // Mail functionality removed
 
     /**
      * @return Renderable
      */
-    public function paymentIndex(): Renderable
-    {
-        $this->updatePaymobConfigForSupportCountry();
-
-        $published_status = 0; // Set a default value
-        $payment_published_status = config('get_payment_publish_status');
-        if (isset($payment_published_status[0]['is_published'])) {
-            $published_status = $payment_published_status[0]['is_published'];
-        }
-
-        $routes = config('addon_admin_routes');
-        $desiredName = 'payment_setup';
-        $payment_url = '';
-
-        foreach ($routes as $routeArray) {
-            foreach ($routeArray as $route) {
-                if ($route['name'] === $desiredName) {
-                    $payment_url = $route['url'];
-                    break 2;
-                }
-            }
-        }
-
-        $data_values = Setting::whereIn('settings_type', ['payment_config'])
-            ->whereIn('key_name', ['ssl_commerz', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paystack', 'paymob_accept', 'flutterwave', 'bkash', 'mercadopago'])
-            ->get();
-
-        return view('admin-views.business-settings.payment-index', compact('published_status', 'payment_url', 'data_values'));
-    }
+    // Payment index functionality removed
 
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function paymentMethodStatus(Request $request): RedirectResponse
-    {
-        $request['cash_on_delivery'] = $request->has('cash_on_delivery') ? 1 : 0;
-        $request['digital_payment'] = $request->has('digital_payment') ? 1 : 0;
-        $request['offline_payment'] = $request->has('offline_payment') ? 1 : 0;
-
-        // Validate that at least one payment method is active
-        if (!$request->cash_on_delivery && !$request->digital_payment && !$request->offline_payment) {
-            Toastr::error(translate('At least one payment method must be active!'));
-            return back();
-        }
-
-        $this->InsertOrUpdateBusinessData(['key' => 'cash_on_delivery'], [
-            'value' => json_encode([
-                'status' => $request['cash_on_delivery']
-            ])
-        ]);
-
-        $this->InsertOrUpdateBusinessData(['key' => 'digital_payment'], [
-            'value' => json_encode([
-                'status' => $request['digital_payment']
-            ])
-        ]);
-
-        $this->InsertOrUpdateBusinessData(['key' => 'offline_payment'], [
-            'value' => json_encode([
-                'status' => $request['offline_payment']
-            ])
-        ]);
-
-        Toastr::success(translate('updated successfully!'));
-        return back();
-    }
+    // Payment method status functionality removed
 
     /**
      * @param Request $request
      * @return RedirectResponse
      * @throws ValidationException
      */
-    public function paymentConfigUpdate(Request $request): RedirectResponse
-    {
-
-        $validation = [
-            'gateway' => 'required|in:ssl_commerz,paypal,stripe,razor_pay,senang_pay,paystack,paymob_accept,flutterwave,bkash,mercadopago',
-            'mode' => 'required|in:live,test'
-        ];
-
-        $request['status'] = $request->has('status') ? 1 : 0;
-
-        $additionalData = [];
-
-        if ($request['gateway'] == 'ssl_commerz') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'store_id' => 'required_if:status,1',
-                'store_password' => 'required_if:status,1'
-            ];
-        } elseif ($request['gateway'] == 'paypal') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'client_id' => 'required_if:status,1',
-                'client_secret' => 'required_if:status,1'
-            ];
-        } elseif ($request['gateway'] == 'stripe') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'api_key' => 'required_if:status,1',
-                'published_key' => 'required_if:status,1',
-            ];
-        } elseif ($request['gateway'] == 'razor_pay') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'api_key' => 'required_if:status,1',
-                'api_secret' => 'required_if:status,1'
-            ];
-        } elseif ($request['gateway'] == 'senang_pay') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'callback_url' => 'required_if:status,1',
-                'secret_key' => 'required_if:status,1',
-                'merchant_id' => 'required_if:status,1'
-            ];
-        } elseif ($request['gateway'] == 'paystack') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'public_key' => 'required_if:status,1',
-                'secret_key' => 'required_if:status,1',
-                'merchant_email' => 'required_if:status,1'
-            ];
-        } elseif ($request['gateway'] == 'paymob_accept') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'supported_country' => 'required',
-                'public_key' => 'required',
-                'secret_key' => 'required',
-                'integration_id' => 'required',
-                'hmac' => 'required'
-            ];
-        } elseif ($request['gateway'] == 'mercadopago') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'access_token' => 'required_if:status,1',
-                'public_key' => 'required_if:status,1'
-            ];
-        } elseif ($request['gateway'] == 'flutterwave') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'secret_key' => 'required_if:status,1',
-                'public_key' => 'required_if:status,1',
-                'hash' => 'required_if:status,1'
-            ];
-        } elseif ($request['gateway'] == 'bkash') {
-            $additionalData = [
-                'status' => 'required|in:1,0',
-                'app_key' => 'required_if:status,1',
-                'app_secret' => 'required_if:status,1',
-                'username' => 'required_if:status,1',
-                'password' => 'required_if:status,1',
-            ];
-        }
-
-        $request->validate(array_merge($validation, $additionalData));
-
-        $settings = Setting::where('key_name', $request['gateway'])->where('settings_type', 'payment_config')->first();
-
-        $additionalDataImage = $settings['additional_data'] != null ? json_decode($settings['additional_data']) : null;
-
-        if ($request->has('gateway_image')) {
-            $gatewayImage = Helpers::upload('payment_modules/gateway_image/', 'png', $request['gateway_image']);
-        } else {
-            $gatewayImage = $additionalDataImage != null ? $additionalDataImage->gateway_image : '';
-        }
-
-        if ($request['gateway_title'] == null) {
-            Toastr::error(translate('payment_gateway_title_is_required!'));
-            return back();
-        }
-
-        $paymentAdditionalData = [
-            'gateway_title' => $request['gateway_title'],
-            'gateway_image' => $gatewayImage,
-        ];
-
-        $validator = Validator::make($request->all(), array_merge($validation, $additionalData));
-
-        Setting::updateOrCreate(['key_name' => $request['gateway'], 'settings_type' => 'payment_config'], [
-            'key_name' => $request['gateway'],
-            'live_values' => $validator->validate(),
-            'test_values' => $validator->validate(),
-            'settings_type' => 'payment_config',
-            'mode' => $request['mode'],
-            'is_active' => $request->status,
-            'additional_data' => json_encode($paymentAdditionalData),
-        ]);
-
-        Toastr::success(GATEWAYS_DEFAULT_UPDATE_200['message']);
-        return back();
-
-    }
+    // Payment config update functionality removed
 
     /**
      * @return Renderable
@@ -717,7 +486,7 @@ class BusinessSettingsController extends Controller
      */
     public function fcmIndex(): Renderable
     {
-        $data = $this->business_setting->with('translations')->where(['key' => 'order_pending_message'])->first();
+        $data = $this->business_setting->where(['key' => 'order_pending_message'])->first();
         if (!$this->business_setting->where(['key' => 'order_pending_message'])->first()) {
             $this->business_setting->insert([
                 'key' => 'order_pending_message',
@@ -960,15 +729,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->order_pending_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $pendingOrder->id,
-                        'locale' => $key,
-                        'key' => 'order_pending_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -986,15 +747,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->order_confirmation_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $confirmOrder->id,
-                        'locale' => $key,
-                        'key' => 'order_confirmation_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1012,15 +765,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->order_processing_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $processingOrder->id,
-                        'locale' => $key,
-                        'key' => 'order_processing_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1039,15 +784,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->order_out_for_delivery_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $outForDelivery->id,
-                        'locale' => $key,
-                        'key' => 'order_out_for_delivery_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1065,15 +802,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->order_delivered_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $orderDelivered->id,
-                        'locale' => $key,
-                        'key' => 'order_delivered_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1083,24 +812,7 @@ class BusinessSettingsController extends Controller
                 'message' => $request['delivery_boy_assign_message'],
             ]),
         ]);
-        $deliverymanAssign = $this->business_setting->where('key', 'delivery_boy_assign_message')->first();
-        foreach ($request->lang as $index => $key) {
-            if ($key === 'default') {
-                continue;
-            }
-            $message = $request->assign_deliveryman_message[$index - 1] ?? null;
-            if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $deliverymanAssign->id,
-                        'locale' => $key,
-                        'key' => 'assign_deliveryman_message'
-                    ],
-                    ['value' => $message]
-                );
-            }
-        }
+        // Delivery man functionality removed
 
         $this->InsertOrUpdateBusinessData(['key' => 'delivery_boy_start_message'], [
             'value' => json_encode([
@@ -1108,24 +820,7 @@ class BusinessSettingsController extends Controller
                 'message' => $request['delivery_boy_start_message'],
             ]),
         ]);
-        $deliverymanStart = $this->business_setting->where('key', 'delivery_boy_start_message')->first();
-        foreach ($request->lang as $index => $key) {
-            if ($key === 'default') {
-                continue;
-            }
-            $message = $request->deliveryman_start_message[$index - 1] ?? null;
-            if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $deliverymanStart->id,
-                        'locale' => $key,
-                        'key' => 'deliveryman_start_message'
-                    ],
-                    ['value' => $message]
-                );
-            }
-        }
+        // Delivery man functionality removed
 
         $this->InsertOrUpdateBusinessData(['key' => 'delivery_boy_delivered_message'], [
             'value' => json_encode([
@@ -1133,24 +828,7 @@ class BusinessSettingsController extends Controller
                 'message' => $request['delivery_boy_delivered_message'],
             ]),
         ]);
-        $deliverymanDelivered = $this->business_setting->where('key', 'delivery_boy_delivered_message')->first();
-        foreach ($request->lang as $index => $key) {
-            if ($key === 'default') {
-                continue;
-            }
-            $message = $request->deliveryman_delivered_message[$index - 1] ?? null;
-            if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $deliverymanDelivered->id,
-                        'locale' => $key,
-                        'key' => 'deliveryman_delivered_message'
-                    ],
-                    ['value' => $message]
-                );
-            }
-        }
+        // Delivery man functionality removed
 
         $this->InsertOrUpdateBusinessData(['key' => 'customer_notify_message'], [
             'value' => json_encode([
@@ -1165,15 +843,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->customer_notification_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $customerNotify->id,
-                        'locale' => $key,
-                        'key' => 'customer_notification_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1190,15 +860,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->notify_for_time_change_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $notifyForTimeChange->id,
-                        'locale' => $key,
-                        'key' => 'notify_for_time_change_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1215,15 +877,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->return_order_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $returnOrder->id,
-                        'locale' => $key,
-                        'key' => 'return_order_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1240,15 +894,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->failed_order_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $failedOrder->id,
-                        'locale' => $key,
-                        'key' => 'failed_order_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1265,15 +911,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->canceled_order_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $canceledOrder->id,
-                        'locale' => $key,
-                        'key' => 'canceled_order_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1290,42 +928,11 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->add_fund_wallet_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $addWallet->id,
-                        'locale' => $key,
-                        'key' => 'add_fund_wallet_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
-        $this->InsertOrUpdateBusinessData(['key' => 'add_wallet_bonus_message'], [
-            'value' => json_encode([
-                'status' => $request['add_wallet_bonus_status'] == 1 ? 1 : 0,
-                'message' => $request['add_wallet_bonus_message'],
-            ]),
-        ]);
-        $addWalletBonus = $this->business_setting->where('key', 'add_wallet_bonus_message')->first();
-        foreach ($request->lang as $index => $key) {
-            if ($key === 'default') {
-                continue;
-            }
-            $message = $request->add_fund_wallet_bonus_message[$index - 1] ?? null;
-            if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $addWalletBonus->id,
-                        'locale' => $key,
-                        'key' => 'add_fund_wallet_bonus_message'
-                    ],
-                    ['value' => $message]
-                );
-            }
-        }
+        // Wallet functionality removed
 
         $this->InsertOrUpdateBusinessData(['key' => 'register_with_referral_code_message'], [
             'value' => json_encode([
@@ -1341,15 +948,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->register_with_referral_code_bonus_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $register_with_referral_code->id,
-                        'locale' => $key,
-                        'key' => 'register_with_referral_code_bonus_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1367,15 +966,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->referral_code_user_first_order_place_bonus_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $register_with_referral_code->id,
-                        'locale' => $key,
-                        'key' => 'referral_code_user_first_order_place_bonus_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1393,15 +984,7 @@ class BusinessSettingsController extends Controller
             }
             $message = $request->referral_code_user_first_order_delivered_bonus_message[$index - 1] ?? null;
             if ($message !== null) {
-                Translation::updateOrInsert(
-                    [
-                        'translationable_type' => 'App\Model\BusinessSetting',
-                        'translationable_id' => $register_with_referral_code->id,
-                        'locale' => $key,
-                        'key' => 'referral_code_user_first_order_delivered_bonus_message'
-                    ],
-                    ['value' => $message]
-                );
+                // Translation functionality removed - always use English
             }
         }
 
@@ -1412,27 +995,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Renderable
      */
-    public function mapApiSettings(): Renderable
-    {
-        return view('admin-views.business-settings.map-api');
-    }
-
-    /**
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function updateMapApi(Request $request): RedirectResponse
-    {
-        $this->InsertOrUpdateBusinessData(['key' => 'map_api_server_key'], [
-            'value' => $request['map_api_server_key'],
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'map_api_client_key'], [
-            'value' => $request['map_api_client_key'],
-        ]);
-
-        Toastr::success(translate('Settings updated!'));
-        return back();
-    }
+    // Map API functionality removed
 
     /**
      * @param Request $request
@@ -1518,96 +1081,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Renderable
      */
-    public function socialMedia(): Renderable
-    {
-        return view('admin-views.business-settings.social-media');
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function fetch(Request $request): JsonResponse
-    {
-        if ($request->ajax()) {
-            $data = $this->social_media->orderBy('id', 'desc')->get();
-            return response()->json($data);
-        }
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function socialMediaStore(Request $request): JsonResponse
-    {
-        try {
-            $this->social_media->updateOrInsert([
-                'name' => $request->get('name'),
-            ], [
-                'name' => $request->get('name'),
-                'link' => $request->get('link'),
-            ]);
-
-            return response()->json([
-                'success' => 1,
-            ]);
-
-        } catch (\Exception $exception) {
-            return response()->json([
-                'error' => 1,
-            ]);
-        }
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function socialMediaEdit(Request $request): JsonResponse
-    {
-        $data = $this->social_media->where('id', $request->id)->first();
-        return response()->json($data);
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function socialMediaUpdate(Request $request): JsonResponse
-    {
-        $socialMedia = $this->social_media->find($request->id);
-        $socialMedia->name = $request->name;
-        $socialMedia->link = $request->link;
-        $socialMedia->save();
-
-        return response()->json();
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function socialMediaDelete(Request $request): JsonResponse
-    {
-        $br = $this->social_media->find($request->id);
-        $br->delete();
-        return response()->json();
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function socialMediaStatusUpdate(Request $request): JsonResponse
-    {
-        $this->social_media->where(['id' => $request['id']])->update([
-            'status' => $request['status'],
-        ]);
-        return response()->json([
-            'success' => 1,
-        ], 200);
-    }
+    // Social media functionality removed
 
     /**
      * @param Request $request
@@ -1622,11 +1096,12 @@ class BusinessSettingsController extends Controller
             'value' => $request->delivery_charge,
         ]);
 
+        // Delivery man functionality removed - using default values
         if ($request['min_shipping_charge'] == null) {
-            $request['min_shipping_charge'] = Helpers::get_business_settings('delivery_management')['min_shipping_charge'];
+            $request['min_shipping_charge'] = 0;
         }
         if ($request['shipping_per_km'] == null) {
-            $request['shipping_per_km'] = Helpers::get_business_settings('delivery_management')['shipping_per_km'];
+            $request['shipping_per_km'] = 0;
         }
         if ($request['shipping_status'] == 1) {
             $request->validate([
@@ -1831,15 +1306,8 @@ class BusinessSettingsController extends Controller
      */
     public function customerSettings(): Factory|View|Application
     {
-        $data = $this->business_setting->where('key', 'like', 'wallet_%')
-            ->orWhere('key', 'like', 'loyalty_%')
-            ->orWhere('key', 'like', 'ref_earning_%')
-            ->orWhere('key', 'like', 'ref_earning_%')
-            ->orWhere('key', 'like', 'add_fund_to_wallet')
-            ->orWhere('key', 'like', 'customer_referred_%')
-            ->get();
-        $data = array_column($data->toArray(), 'value', 'key');
-
+        // Wallet and loyalty functionality removed
+        $data = [];
         return view('admin-views.business-settings.customer-settings', compact('data'));
     }
 
@@ -1849,53 +1317,8 @@ class BusinessSettingsController extends Controller
      */
     public function customerSettingsUpdate(Request $request): RedirectResponse
     {
-        $request->validate([
-            'loyalty_point_item_purchase_point' => 'nullable|numeric',
-            'loyalty_point_exchange_rate' => 'nullable|numeric',
-            'ref_earning_exchange_rate' => 'nullable|numeric',
-            'loyalty_point_minimum_point' => 'nullable|numeric',
-        ]);
-
-        $this->InsertOrUpdateBusinessData(['key' => 'wallet_status'], [
-            'value' => $request['customer_wallet'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'loyalty_point_status'], [
-            'value' => $request['customer_loyalty_point'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'ref_earning_status'], [
-            'value' => $request['ref_earning_status'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'add_fund_to_wallet'], [
-            'value' => $request['add_fund_to_wallet'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'loyalty_point_exchange_rate'], [
-            'value' => $request['loyalty_point_exchange_rate'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'ref_earning_exchange_rate'], [
-            'value' => $request['ref_earning_exchange_rate'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'loyalty_point_item_purchase_point'], [
-            'value' => $request['item_purchase_point'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'loyalty_point_minimum_point'], [
-            'value' => $request['loyalty_point_minimum_point'] ?? 0
-        ]);
-
-        $this->InsertOrUpdateBusinessData(['key' => 'customer_referred_discount_status'], [
-            'value' => $request['customer_referred_discount_status'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'customer_referred_discount_type'], [
-            'value' => $request['customer_referred_discount_type'] ?? 'percent'
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'customer_referred_discount_amount'], [
-            'value' => $request['customer_referred_discount_amount'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'customer_referred_validity_type'], [
-            'value' => $request['customer_referred_validity_type'] ?? 0
-        ]);
-        $this->InsertOrUpdateBusinessData(['key' => 'customer_referred_validity_value'], [
-            'value' => $request['customer_referred_validity_value'] ?? 0
-        ]);
+        // Wallet, loyalty, and referral functionality removed
+        // No validation or data processing needed
 
         Toastr::success(translate('customer_settings_updated_successfully'));
         return back();
@@ -1904,48 +1327,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function firebaseOTPVerification(): Factory|View|Application
-    {
-        return view('admin-views.business-settings.firebase-otp-verification');
-    }
-
-    /**
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function firebaseOTPVerificationUpdate(Request $request): RedirectResponse
-    {
-        if ($request->has('status')) {
-            $request->validate([
-                'web_api_key' => 'required',
-            ]);
-        }
-
-        $this->InsertOrUpdateBusinessData(['key' => 'firebase_otp_verification'], [
-            'value' => json_encode([
-                'status' => $request->has('status') ? 1 : 0,
-                'web_api_key' => $request['web_api_key'],
-            ]),
-        ]);
-
-        if ($request->has('status')) {
-            foreach (['twilio', 'nexmo', '2factor', 'msg91', 'signal_wire'] as $gateway) {
-                $keep = Setting::where(['key_name' => $gateway, 'settings_type' => 'sms_config'])->first();
-                if (isset($keep)) {
-                    $hold = $keep->live_values;
-                    $hold['status'] = 0;
-                    Setting::where(['key_name' => $gateway, 'settings_type' => 'sms_config'])->update([
-                        'live_values' => $hold,
-                        'test_values' => $hold,
-                        'is_active' => 0,
-                    ]);
-                }
-            }
-        }
-
-        Toastr::success(translate('updated_successfully'));
-        return back();
-    }
+    // Firebase OTP verification functionality removed
 
     public function productIndex(): Factory|View|Application
     {
@@ -2059,7 +1441,7 @@ class BusinessSettingsController extends Controller
         ]);
 
         $selectedSystems = [];
-        $systems = ['branch_panel', 'customer_app', 'web_app', 'deliveryman_app', 'table_app', 'kitchen_app'];
+        $systems = ['branch_panel', 'customer_app', 'web_app', 'table_app', 'kitchen_app'];
 
         foreach ($systems as $system) {
             if ($request->has($system)) {
@@ -2123,31 +1505,12 @@ class BusinessSettingsController extends Controller
 
         try {
             Helpers::send_push_notif_to_topic($data, 'notify', 'maintenance');
-            Helpers::send_push_notif_to_topic($data, "deliveryman", 'maintenance');
+            // Delivery man functionality removed
         } catch (\Exception $e) {
         }
     }
 
-    public function marketingTools()
-    {
-        return view('admin-views.business-settings.marketing-tools');
-    }
-
-    public function updateMarketingTools(Request $request, $type)
-    {
-
-        if ($type == 'meta') {
-            $this->InsertOrUpdateBusinessData(['key' => 'meta_pixel'], [
-                'value' => json_encode([
-                    'status' => $request->has('status') ? 1 : 0,
-                    'meta_app_id' => $request['meta_app_id'],
-                ]),
-            ]);
-        }
-
-        Toastr::success(translate('Successfully updated!'));
-        return back();
-    }
+    // Marketing tools functionality removed
 
     /**
      * @param $key
@@ -2168,39 +1531,4 @@ class BusinessSettingsController extends Controller
         }
     }
 
-    private function updatePaymobConfigForSupportCountry(): void
-    {
-        $paymobAccept = Setting::where(['key_name' => 'paymob_accept'])->first()?->live_values ?? [];
-        $paymobAcceptValues = is_array($paymobAccept) ? $paymobAccept : json_decode($paymobAccept, true);
-
-        if (!isset($paymobAcceptValues['supported_country']) || !isset($paymobAcceptValues['secret_key'])) {
-            Setting::updateOrCreate(['key_name' => 'paymob_accept', 'settings_type' => 'payment_config'], [
-                'key_name' => 'paymob_accept',
-                'live_values' => [
-                    'gateway' => $paymobAcceptValues['gateway'] ?? '',
-                    'mode' => "live",
-                    'status' => $paymobAcceptValues['status'] ?? 0,
-                    'supported_country' => "",
-                    'public_key' => $paymobAcceptValues['public_key'] ?? '',
-                    'secret_key' => $paymobAcceptValues['secret_key'] ?? '',
-                    'integration_id' => $paymobAcceptValues['integration_id'] ?? '',
-                    'hmac' => $paymobAcceptValues['hmac'] ?? '',
-                ],
-                'test_values' => [
-                    'gateway' => $paymobAcceptValues['gateway'] ?? '',
-                    'mode' => "test",
-                    'status' => $paymobAcceptValues['status'] ?? 0,
-                    'supported_country' => "",
-                    'public_key' => $paymobAcceptValues['public_key'] ?? '',
-                    'secret_key' => $paymobAcceptValues['secret_key'] ?? '',
-                    'integration_id' => $paymobAcceptValues['integration_id'] ?? '',
-                    'hmac' => $paymobAcceptValues['hmac'] ?? '',
-                ],
-                'settings_type' => 'payment_config',
-                'mode' => 'test',
-                'is_active' => 0 ,
-                'additional_data' => null,
-            ]);
-        }
-    }
 }

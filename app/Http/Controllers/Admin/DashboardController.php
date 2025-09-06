@@ -10,7 +10,7 @@ use App\Model\Category;
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\Product;
-use App\Model\Review;
+// Review functionality removed
 use App\User;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
@@ -25,7 +25,7 @@ class DashboardController extends Controller
         private Order       $order,
         private OrderDetail $orderDetail,
         private Admin       $admin,
-        private Review      $review,
+        // Review functionality removed
         private User        $user,
         private Product     $product,
         private Category    $category,
@@ -70,15 +70,8 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
-        $mostRatedProducts = $this->review->with(['product'])
-            ->select(['product_id',
-                DB::raw('AVG(rating) as ratings_average'),
-                DB::raw('COUNT(rating) as total'),
-            ])
-            ->groupBy('product_id')
-            ->orderBy("total", 'desc')
-            ->take(7)
-            ->get();
+        // Review functionality removed - most rated products
+        $mostRatedProducts = collect([]);
 
         $topCustomer = $this->order->with(['customer'])
             ->select('user_id', DB::raw('COUNT(user_id) as count'))

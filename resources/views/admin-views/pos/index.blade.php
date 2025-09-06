@@ -119,22 +119,7 @@
                                     </div>
                                 </div>
 
-                                <div class="d-none" id="dine_in_section">
-                                    <div class="form-group d-flex flex-wrap flex-sm-nowrap gap-2">
-                                        <select name="table_id" class="js-select2-custom-x form-ellipsis form-control select-table">
-                                            <option disabled selected>{{translate('select_table')}}</option>
-                                            @foreach($tables as $table)
-                                                <option value="{{$table['id']}}" {{ session()->get('table_id') == $table['id'] ? 'selected' : '' }}>{{translate('table ')}} - {{$table['number']}}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group d-flex flex-wrap flex-sm-nowrap gap-2">
-                                        <input type="number" value="{{ session('people_number') }}" name="number_of_people"  step="1"
-                                               id="number_of_people" class="form-control" min="1" max="99"
-                                               placeholder="{{translate('Number Of People')}}">
-                                    </div>
-                                </div>
+                                {{-- Table management functionality removed --}}
 
                                 <div class="form-group d-none" id="home_delivery_section">
                                     <div class="d-flex justify-content-between">
@@ -475,16 +460,7 @@
             select_order_type(selectedOrderType);
         });
 
-        $('.select-table').change(function() {
-            var selectedTableId = $(this).val();
-            store_key('table_id', selectedTableId);
-        });
-
-        $('#number_of_people').keyup(function() {
-            var numberOfPeople = $(this).val().replace(/[^\d]/g, '');
-            $(this).val(numberOfPeople);
-            store_key('people_number', numberOfPeople);
-        });
+        // Table management functionality removed
 
         $('.sign-out-trigger').click(function(event) {
             event.preventDefault();
@@ -981,15 +957,10 @@
                 },
             });
 
-            if (order_type == 'dine_in') {
-                $('#dine_in_section').removeClass('d-none');
-                $('#home_delivery_section').addClass('d-none')
-            } else if(order_type == 'home_delivery') {
+            if(order_type == 'home_delivery') {
                 $('#home_delivery_section').removeClass('d-none');
-                $('#dine_in_section').addClass('d-none');
             }else{
-                $('#home_delivery_section').addClass('d-none')
-                $('#dine_in_section').addClass('d-none');
+                $('#home_delivery_section').addClass('d-none');
             }
         }
 

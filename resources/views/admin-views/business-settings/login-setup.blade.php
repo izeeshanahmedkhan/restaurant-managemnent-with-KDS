@@ -147,18 +147,7 @@
                                         </div>
                                     </div>
                                     <div class="col-lg-4 col-sm-6 mb-2">
-                                        <div class="form-control d-flex justify-content-between align-items-center gap-3">
-                                            <label class="text-dark mb-0">{{translate('Phone Number Verification')}}
-                                                <i class="tio-info-outined"
-                                                   data-toggle="tooltip"
-                                                   data-placement="top"
-                                                   title="{{ translate('If Phone Number verification is on, Customers must verify their Phone Number with an OTP to complete the signup process.') }}">
-                                                </i>
-                                            </label>
-                                            <input class="" name="phone_verification" type="checkbox"
-                                                   {{ $phoneVerification == 1 ? 'checked' : '' }}
-                                                   id="phone-verification">
-                                        </div>
+                                        <!-- Phone verification removed -->
                                     </div>
                                 </div>
                             </div>
@@ -175,30 +164,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="smsConfigModal" tabindex="-1" role="dialog" aria-labelledby="smsConfigModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body text-center">
-                    <div>
-                        <img src="{{ asset('assets/admin/img/sms-img.png') }}" alt="{{ translate('image') }}">
-                    </div>
-                    <div class="py-4">
-                        <h5 class="modal-title" id="smsConfigModalLabel">{{ translate('Set Up SMS Configuration First') }}</h5>
-                    </div>
-                    <p>{{ translate('It looks like your SMS configuration is not set up yet. To enable the OTP system, please set up the SMS configuration first.') }}</p>
-                </div>
-                <div class="text text-center mb-5">
-                    <a href="{{route('admin.business-settings.web-app.sms-module')}}" target="_blank" class="btn btn-primary">{{ translate('Go to SMS Configuration') }}</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- SMS modal removed -->
 
     <!-- Modal -->
     <div class="modal fade" id="socialMediaConfigModal" tabindex="-1" role="dialog" aria-labelledby="socialMediaConfigModalLabel" aria-hidden="true">
@@ -219,7 +185,7 @@
                     <p id="socialMediaConfigModalDescription">{{ translate('It looks like your Apple configuration is not set up yet. To enable the Apple login system, please set up the Apple configuration first.') }}</p>
                 </div>
                 <div class="text text-center mb-5">
-                    <a href="{{route('admin.business-settings.web-app.third-party.social-login')}}" target="_blank" class="btn btn-primary">{{ translate('Go to Apple Configuration') }}</a>
+                    <!-- Social login configuration removed -->
                 </div>
             </div>
         </div>
@@ -257,31 +223,12 @@
             $('#otp-login').change(function(event) {
                 if ($(this).is(':checked')) {
                     isSmsGatewayActivated(function(isActivated) {
-                        if (!isActivated) {
-                            event.preventDefault();
-                            $('#otp-login').prop('checked', false);
-                            $('#smsConfigModal').modal('show');
-                        }
-                        else {
-                            $('#phone-verification').prop('checked', true);
-                        }
+                        // SMS functionality removed
                     });
                 }
             });
 
-            // Function to check if any SMS gateway is activated
-            function isSmsGatewayActivated(callback) {
-                $.ajax({
-                    url: '{{ route('admin.business-settings.restaurant.check-active-sms-gateway') }}',
-                    method: 'GET',
-                    success: function(response) {
-                        callback(response > 0);
-                    },
-                    error: function() {
-                        callback(false);
-                    }
-                });
-            }
+            // SMS functionality removed
         });
 
         $(document).ready(function() {

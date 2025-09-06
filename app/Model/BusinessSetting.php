@@ -7,10 +7,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class BusinessSetting extends Model
 {
-    public function translations(): MorphMany
-    {
-        return $this->morphMany('App\Model\Translation', 'translationable');
-    }
+    // Translation functionality removed
 
     protected $fillable = [
         'key',

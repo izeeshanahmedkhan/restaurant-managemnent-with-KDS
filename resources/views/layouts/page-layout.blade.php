@@ -9,7 +9,7 @@
 
     @php($icon = \App\Model\BusinessSetting::where(['key' => 'fav_icon'])->first()->value??'')
 
-    <link rel="shortcut icon" href="{{ asset('storage/app/restaurant/' . $icon ?? '') }}">
+    <link rel="shortcut icon" href="{{ asset('storage/restaurant/' . $icon ?? '') }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('assets/admin')}}/css/vendor.min.css">
@@ -31,7 +31,7 @@
         $cancellationPage = isset($pageNames['cancellation_page']) ? json_decode($pageNames['cancellation_page'], true) : null;
 
         $logoName = \App\CentralLogics\Helpers::get_business_settings('logo');
-        $logo = \App\CentralLogics\Helpers::onErrorImage($logoName, asset('storage/app/restaurant') . '/' . $logoName, asset('assets/admin/img/160x160/img2.jpg'), 'restaurant/');
+        $logo = \App\CentralLogics\Helpers::onErrorImage($logoName, asset('storage/restaurant') . '/' . $logoName, asset('assets/admin/img/160x160/img2.jpg'), 'restaurant/');
     ?>
     <div class="container">
         <div class="inline-page-menu mt-4 d-flex justify-content-between gap-3 flex-wrap">

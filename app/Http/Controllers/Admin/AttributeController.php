@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Model\Attribute;
-use App\Model\Translation;
+// Translation model removed
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +15,7 @@ class AttributeController extends Controller
 {
     public function __construct(
         private Attribute   $attribute,
-        private Translation $translation
+        // Translation model removed
     )
     {
     }
@@ -67,21 +67,7 @@ class AttributeController extends Controller
         $attribute->name = $request->name[array_search('en', $request->lang)];
         $attribute->save();
 
-        $data = [];
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $data[] = array(
-                    'translationable_type' => 'App\Model\Attribute',
-                    'translationable_id' => $attribute->id,
-                    'locale' => $key,
-                    'key' => 'name',
-                    'value' => $request->name[$index],
-                );
-            }
-        }
-        if (count($data)) {
-            $this->translation->insert($data);
-        }
+        // Translation functionality removed - always use English
 
         Toastr::success(translate('Attribute added successfully!'));
         return back();
@@ -93,7 +79,7 @@ class AttributeController extends Controller
      */
     public function edit($id): Renderable
     {
-        $attribute = $this->attribute->withoutGlobalScopes()->with('translations')->find($id);
+        $attribute = $this->attribute->withoutGlobalScopes()->with('// translations removed')->find($id);
         return view('admin-views.attribute.edit', compact('attribute'));
     }
 
@@ -119,17 +105,7 @@ class AttributeController extends Controller
         $attribute->name = $request->name[array_search('en', $request->lang)];
         $attribute->save();
 
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $this->translation->updateOrInsert(
-                    ['translationable_type' => 'App\Model\Attribute',
-                        'translationable_id' => $attribute->id,
-                        'locale' => $key,
-                        'key' => 'name'],
-                    ['value' => $request->name[$index]]
-                );
-            }
-        }
+        // Translation functionality removed - always use English
 
         Toastr::success(translate('Attribute updated successfully!'));
         return back();

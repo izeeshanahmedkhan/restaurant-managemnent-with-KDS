@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Model\Category;
-use App\Model\Translation;
+// Translation model removed
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +16,7 @@ class CategoryController extends Controller
 {
     public function __construct(
         private Category    $category,
-        private Translation $translation
+        // Translation model removed
     )
     {}
 
@@ -117,21 +117,7 @@ class CategoryController extends Controller
         $category->position = $request->position;
         $category->save();
 
-        $data = [];
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $data[] = array(
-                    'translationable_type' => 'App\Model\Category',
-                    'translationable_id' => $category->id,
-                    'locale' => $key,
-                    'key' => 'name',
-                    'value' => $request->name[$index],
-                );
-            }
-        }
-        if (count($data)) {
-            $this->translation->insert($data);
-        }
+        // Translation functionality removed - always use English
 
         Toastr::success($request->parent_id == 0 ? translate('Category Added Successfully!') : translate('Sub Category Added Successfully!'));
         return back();
@@ -143,7 +129,7 @@ class CategoryController extends Controller
      */
     public function edit($id): Renderable
     {
-        $category = $this->category->withoutGlobalScopes()->with('translations')->find($id);
+        $category = $this->category->withoutGlobalScopes()->with('// translations removed')->find($id);
         return view('admin-views.category.edit', compact('category'));
     }
 
@@ -185,17 +171,7 @@ class CategoryController extends Controller
         $category->banner_image = $request->has('banner_image') ? Helpers::update('category/banner/', $category->banner_image, 'png', $request->file('banner_image')) : $category->banner_image;
         $category->save();
 
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $this->translation->updateOrInsert(
-                    ['translationable_type' => 'App\Model\Category',
-                        'translationable_id' => $category->id,
-                        'locale' => $key,
-                        'key' => 'name'],
-                    ['value' => $request->name[$index]]
-                );
-            }
-        }
+        // Translation functionality removed - always use English
 
         Toastr::success($category->parent_id == 0 ? translate('Category updated successfully!') : translate('Sub Category updated successfully!'));
         return back();

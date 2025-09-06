@@ -14,11 +14,7 @@ class OrderLogic
 {
     public static function track_order($order_id)
     {
-        $order = Order::with(['details',
-            'delivery_man' => function ($query) {
-                $query->withCount('reviews'); // Count reviews
-            },
-            'delivery_man.rating','order_partial_payments', 'branch', 'offline_payment', 'order_change_amount'])
+        $order = Order::with(['details', 'order_partial_payments', 'branch', 'offline_payment', 'order_change_amount'])
             ->where(['id' => $order_id])
             ->first();
 
@@ -32,7 +28,7 @@ class OrderLogic
         return Helpers::order_data_formatting($order, false);
     }
 
-    public static function place_order($customer_id, $email, $customer_info, $cart, $payment_method, $discount, $coupon_code = null)
+    public static function place_order($customer_id, $email, $customer_info, $cart, $payment_method, $discount)
     {
         try {
             $or = [
@@ -44,8 +40,7 @@ class OrderLogic
                 'payment_method' => $payment_method,
                 'transaction_ref' => null,
                 'discount_amount' => $discount,
-                'coupon_code' => $coupon_code,
-                'discount_type' => $discount == 0 ? null : 'coupon_discount',
+                'discount_type' => $discount == 0 ? null : 'discount',
                 'shipping_address' => $customer_info['address_id'],
                 'created_at' => now(),
                 'updated_at' => now()
@@ -92,7 +87,7 @@ class OrderLogic
     {
         try{
             $order_transaction = new OrderTransaction;
-            $order_transaction->delivery_man_id = $order->delivery_man_id;
+            // Delivery man functionality removed
             $order_transaction->order_id = $order->id;
             $order_transaction->order_amount = $order->order_amount;
             $order_transaction->delivery_charge = $order->delivery_charge;

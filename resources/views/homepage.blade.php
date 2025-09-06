@@ -7,7 +7,7 @@
 
     @php($icon = \App\Model\BusinessSetting::where(['key' => 'fav_icon'])->first()?->value ?? '')
     <link rel="shortcut icon" href="">
-    <link rel="icon" type="image/x-icon" href="{{ asset('storage/app/restaurant/' . $icon ?? '') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('storage/restaurant/' . $icon ?? '') }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('assets/admin')}}/css/vendor.min.css">
@@ -203,7 +203,7 @@
             <!-- Left Side - Branding -->
             <div class="homepage-left">
                 <img class="restaurant-logo" 
-                     src="{{ asset('storage/app/restaurant/' . $restaurant_logo) }}" 
+                     src="{{ asset('storage/restaurant/' . $restaurant_logo) }}" 
                      alt="{{ $restaurant_name }}"
                      onerror="this.src='{{ asset('assets/admin/img/160x160/img2.jpg') }}'">
                 

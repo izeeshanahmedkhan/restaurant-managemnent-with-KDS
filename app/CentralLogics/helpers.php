@@ -2,16 +2,24 @@
 
 namespace App\CentralLogics;
 
+// Define constants if not already defined
+if (!defined('CACHE_BUSINESS_SETTINGS_TABLE')) {
+    define('CACHE_BUSINESS_SETTINGS_TABLE', 'cache_business_settings_table');
+}
+if (!defined('CACHE_LOGIN_SETUP_TABLE')) {
+    define('CACHE_LOGIN_SETUP_TABLE', 'cache_login_setup_table');
+}
+
 use App\CPU\ImageManager;
 use App\Model\AddOn;
 use App\Model\Branch;
 use App\Model\BusinessSetting;
 use App\Model\Currency;
-use App\Model\DMReview;
+// DMReview model removed
 use App\Model\Order;
 use App\Model\Product;
 use App\Model\ProductByBranch;
-use App\Model\Review;
+// Review functionality removed
 use App\Models\DeliveryChargeByArea;
 use App\Models\LoginSetup;
 use App\User;
@@ -124,16 +132,8 @@ class Helpers
 
                 $item['variations'] = json_decode($item['variations'], true);
 
-                if (count($item['translations'])) {
-                    foreach ($item['translations'] as $translation) {
-                        if ($translation->key == 'name') {
-                            $item['name'] = $translation->value;
-                        }
-                        if ($translation->key == 'description') {
-                            $item['description'] = $translation->value;
-                        }
-                    }
-                }
+                // Translation functionality removed - always use English
+                // No translation processing needed
                 unset($item['translations']);
                 $storage[] = $item;
             }
@@ -166,16 +166,8 @@ class Helpers
             $data['variations'] = gettype($data['variations']) == 'array' ? $data['variations'] : json_decode($data['variations'], true);
 
 
-            if (count($data['translations']) > 0) {
-                foreach ($data['translations'] as $translation) {
-                    if ($translation->key == 'name') {
-                        $data['name'] = $translation->value;
-                    }
-                    if ($translation->key == 'description') {
-                        $data['description'] = $translation->value;
-                    }
-                }
-            }
+            // Translation functionality removed - always use English
+            // No translation processing needed
         }
 
         return $data;
@@ -334,7 +326,7 @@ class Helpers
                     "image" => (string)$data['image'],
                     "order_id" => (string)$data['order_id'],
                     "type" => (string)$data['type'],
-                    "is_deliveryman_assigned" => $isDeliverymanAssigned ? "1" : "0",
+                    // Delivery man functionality removed
                 ],
                 "notification" => [
                     'title' => (string)$data['title'],
@@ -386,15 +378,9 @@ class Helpers
         return self::sendNotificationToHttp($postData);
     }
 
-    public static function rating_count($product_id, $rating)
-    {
-        return Review::where(['product_id' => $product_id, 'rating' => $rating])->count();
-    }
+    // Review rating functionality removed
 
-    public static function dm_rating_count($deliveryman_id, $rating)
-    {
-        return DMReview::where(['delivery_man_id' => $deliveryman_id, 'rating' => $rating])->count();
-    }
+    // Delivery man functionality removed
 
     public static function tax_calculate($product, $price)
     {
@@ -957,9 +943,7 @@ class Helpers
                 $detail['add_on_prices'] = gettype($detail['add_on_prices']) != 'array' ? (array) json_decode($detail['add_on_prices'], true) : (array) $detail['add_on_prices'];
                 $detail['add_on_taxes'] = gettype($detail['add_on_taxes']) != 'array' ? (array) json_decode($detail['add_on_taxes'], true) : (array) $detail['add_on_taxes'];
 
-                if(!isset($detail['reviews_count'])) {
-                    $detail['review_count'] = Review::where(['order_id' => $detail['order_id'], 'product_id' => $detail['product_id']])->count();
-                }
+                // Review functionality removed
 
                 $detail['product_details'] = Helpers::product_formatter($detail['product_details']);
 
@@ -1029,9 +1013,7 @@ class Helpers
                 $data =  str_replace("{restaurantName}", $restaurant_name, $data);
             }
 
-            if($delivery_man_name){
-                $data =  str_replace("{deliveryManName}", $delivery_man_name, $data);
-            }
+            // Delivery man functionality removed
 
             if($order_id){
                 $data =  str_replace("{orderId}", $order_id, $data);
@@ -1085,19 +1067,4 @@ class Helpers
 
 }
 
-function translate($key)
-{
-    $local = session()->has('local') ? session('local') : 'en';
-    App::setLocale($local);
-    $lang_array = include(base_path('resources/lang/' . $local . '/messages.php'));
-    $processed_key = ucfirst(str_replace('_', ' ', Helpers::remove_invalid_charcaters($key)));
-    if (!array_key_exists($key, $lang_array)) {
-        $lang_array[$key] = $processed_key;
-        $str = "<?php return " . var_export($lang_array, true) . ";";
-        file_put_contents(base_path('resources/lang/' . $local . '/messages.php'), $str);
-        $result = $processed_key;
-    } else {
-        $result = __('messages.' . $key);
-    }
-    return $result;
-}
+// translate function moved to Translation.php to avoid conflicts

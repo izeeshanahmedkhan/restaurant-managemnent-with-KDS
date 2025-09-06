@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\CentralLogics\Helpers;
-use App\CentralLogics\SMS_module;
 use App\Http\Controllers\Controller;
 use App\Models\LoginSetup;
-use App\Models\Setting;
+// Setting model removed
 use App\Traits\HelperTrait;
 use App\User;
 use Carbon\CarbonInterval;
@@ -16,7 +15,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Modules\Gateways\Traits\SmsGateway;
 
 class PasswordResetController extends Controller
 {
@@ -85,11 +83,8 @@ class PasswordResetController extends Controller
             if (isset($paymentPublishedStatus[0]['is_published'])) {
                 $publishedStatus = $paymentPublishedStatus[0]['is_published'];
             }
-            if($publishedStatus == 1){
-                $response = SmsGateway::send($customer['phone'], $token);
-            }else{
-                $response = SMS_module::send($customer['phone'], $token);
-            }
+            // SMS functionality removed
+            $response = 'disabled';
             return response()->json(['message' => $response], 200);
         } else{
             try {

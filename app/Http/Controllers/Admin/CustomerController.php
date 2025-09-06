@@ -4,10 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
-use App\Model\Conversation;
-use App\Model\Newsletter;
 use App\Model\Order;
-use App\Model\PointTransitions;
 use App\Model\BusinessSetting;
 use App\User;
 use Box\Spout\Common\Exception\InvalidArgumentException;
@@ -28,63 +25,13 @@ class CustomerController extends Controller
 {
     public function __construct(
         private User             $customer,
-        private PointTransitions $pointTransitions,
         private Order            $order,
-        private Newsletter       $newsletter,
-        private Conversation     $conversation,
         private BusinessSetting  $businessSetting
     )
     {
     }
 
-    /**
-     * @param Request $request
-     * @param $id
-     * @return JsonResponse
-     */
-    public function addLoyaltyPoint(Request $request, $id): JsonResponse
-    {
-        DB::transaction(function () use ($request, $id) {
-            $user = $this->customer->find($id);
-            $credit = $request['point'];
-            $debit = 0;
-            $CurrentAmount = $user->point + $credit;
-
-            $loyaltyPointTransaction = $this->pointTransitions;
-            $loyaltyPointTransaction->user_id = $user->id;
-            $loyaltyPointTransaction->transaction_id = Str::random('30');
-            $loyaltyPointTransaction->reference = 'admin';
-            $loyaltyPointTransaction->type = 'point_in';
-            $loyaltyPointTransaction->amount = $CurrentAmount;
-            $loyaltyPointTransaction->credit = $credit;
-            $loyaltyPointTransaction->debit = $debit;
-            $loyaltyPointTransaction->created_at = now();
-            $loyaltyPointTransaction->updated_at = now();
-            $loyaltyPointTransaction->save();
-
-            $user->point = $CurrentAmount;
-            $user->save();
-        });
-
-        if ($request->ajax()) {
-            return response()->json([
-                'updated_point' => $this->customer->where(['id' => $id])->first()->point
-            ]);
-        }
-    }
-
-    /**
-     * @param $id
-     * @return JsonResponse
-     */
-    public function setPointModalData($id): JsonResponse
-    {
-        $customer = $this->customer->find($id);
-
-        return response()->json([
-            'view' => view('admin-views.customer.partials._add-point-modal-content', compact('customer'))->render()
-        ]);
-    }
+    // Loyalty point functionality removed
 
     /**
      * @param Request $request
@@ -198,58 +145,6 @@ class CustomerController extends Controller
         return view('admin-views.customer.transaction-table', compact('transition', 'search'));
     }
 
-    /**
-     * @param Request $request
-     * @return Renderable
-     */
-    public function subscribedEmails(Request $request): Renderable
-    {
-        $queryParam = [];
-        $search = $request['search'];
-
-        if ($request->has('search')) {
-            $key = explode(' ', $request['search']);
-            $newsletters = $this->newsletter
-                ->where(function ($q) use ($key) {
-                    foreach ($key as $value) {
-                        $q->orWhere('email', 'like', "%{$value}%");
-                    }
-                });
-            $queryParam = ['search' => $request['search']];
-        } else {
-            $newsletters = $this->newsletter;
-        }
-
-        $newsletters = $newsletters->latest()->paginate(Helpers::getPagination())->appends($queryParam);
-        return view('admin-views.customer.subscribed-list', compact('newsletters', 'search'));
-    }
-
-    public function subscribedEmailsExport(Request $request): StreamedResponse|string
-    {
-        if ($request->has('search')) {
-            $key = explode(' ', $request['search']);
-            $newsletters = $this->newsletter
-                ->where(function ($q) use ($key) {
-                    foreach ($key as $value) {
-                        $q->orWhere('email', 'like', "%{$value}%");
-                    }
-                });
-        } else {
-            $newsletters = $this->newsletter;
-        }
-        $newsletters = $newsletters->latest()->get();
-
-        $data = [];
-        foreach ($newsletters as $key => $newsletter) {
-            $data[] = [
-                'SL' => ++$key,
-                'Email' => $newsletter->email,
-                'Subscribe At' => date('d M Y h:m A', strtotime($newsletter['created_at'])),
-            ];
-        }
-
-        return (new FastExcel($data))->download('subscribe-email.xlsx');
-    }
 
     /**
      * @param $id
@@ -282,7 +177,7 @@ class CustomerController extends Controller
     public function getUserInfo(Request $request): JsonResponse
     {
         $user = $this->customer->find($request['id']);
-        $unchecked = $this->conversation->where(['user_id' => $request['id'], 'checked' => 0])->count();
+        $unchecked = 0;
 
         $output = [
             'id' => $user->id ?? '',
@@ -303,51 +198,7 @@ class CustomerController extends Controller
         return response()->json($output);
     }
 
-    /**
-     * @param Request $request
-     * @return bool|array
-     */
-    public function messageNotification(Request $request): bool|array
-    {
-        $user = $this->customer->find($request['id']);
-        $fcmToken = $user->cm_firebase_token;
 
-        $data = [
-            'title' => 'New Message' . ($request->has('image_length') && $request->image_length > 0 ? (' (with ' . $request->image_length . ' attachment)') : ''),
-            'description' => $request->message,
-            'order_id' => '',
-            'image' => $request->has('image_length') ? $request->image_length : null,
-            'type' => 'order_status',
-        ];
-
-        try {
-            Helpers::send_push_notif_to_device($fcmToken, $data);
-            return $data;
-        } catch (\Exception $exception) {
-            return false;
-        }
-
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function chatImageUpload(Request $request): JsonResponse
-    {
-        $imageNames = [];
-        if (!empty($request->file('images'))) {
-            foreach ($request->images as $img) {
-                $image = Helpers::upload('conversation/', 'png', $img);
-                $image_url = asset('storage/conversation') . '/' . $image;
-                $imageNames[] = $image_url;
-            }
-            $images = $imageNames;
-        } else {
-            $images = null;
-        }
-        return response()->json(['image_urls' => $images], 200);
-    }
 
     /**
      * @param Request $request

@@ -21,7 +21,7 @@ class AdminMiddleware
             return $next($request);
         }
         auth()->guard('admin')->logout();
-//        Toastr::error(\App\CentralLogics\translate('you_have_been_blocked!'));
+//        Toastr::error(translate('you_have_been_blocked!'));
         return redirect()->route('admin.auth.login');
     }
 }

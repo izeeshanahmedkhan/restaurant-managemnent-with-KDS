@@ -48,8 +48,5 @@ class OrderDetail extends Model
         return $this->belongsTo(Order::class, 'order_id');
     }
 
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(Review::class, 'order_id', 'order_id');
-    }
+    // Review functionality removed
 }

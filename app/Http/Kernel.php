@@ -5,7 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\ActivationCheckMiddleware;
 use App\Http\Middleware\ApiActiveCustomer;
 use App\Http\Middleware\AdminMiddleware;
-use App\Http\Middleware\ApiActiveDeliveryMan;
+// Delivery man functionality removed
 use App\Http\Middleware\AppActivation;
 use App\Http\Middleware\BranchAdder;
 use App\Http\Middleware\BranchMiddleware;
@@ -82,7 +82,7 @@ class Kernel extends HttpKernel
         'module' => ModulePermissionMiddleware::class,
         'app_activate'=>AppActivation::class,
         'is_active' => ApiActiveCustomer::class,
-        'deliveryman_is_active' => ApiActiveDeliveryMan::class,
+        // Delivery man functionality removed
         'branch_status' => BranchStatusCheck::class,
         'branch_adder' => BranchAdder::class,
         'maintenance_mode' => MaintenanceModeMiddleware::class,

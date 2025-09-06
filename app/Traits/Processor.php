@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Foundation\Application;
-use App\Models\Setting;
+// Setting model removed
 use Illuminate\Support\Facades\Storage;
 use App\Models\PaymentRequest;
 
@@ -35,13 +35,14 @@ trait  Processor
     public function translate($key)
     {
         try {
+            // Always use English - multi-language functionality removed
             App::setLocale('en');
-            $lang_array = include(base_path('resources/lang/' . 'en' . '/lang.php'));
+            $lang_array = include(base_path('resources/lang/en/lang.php'));
             $processed_key = ucfirst(str_replace('_', ' ', str_ireplace(['\'', '"', ',', ';', '<', '>', '?'], ' ', $key)));
             if (!array_key_exists($key, $lang_array)) {
                 $lang_array[$key] = $processed_key;
                 $str = "<?php return " . var_export($lang_array, true) . ";";
-                file_put_contents(base_path('resources/lang/' . 'en' . '/lang.php'), $str);
+                file_put_contents(base_path('resources/lang/en/lang.php'), $str);
                 $result = $processed_key;
             } else {
                 $result = __('lang.' . $key);
@@ -55,8 +56,7 @@ trait  Processor
     public function payment_config($key, $settings_type): object|null
     {
         try {
-            $config = DB::table('addon_settings')->where('key_name', $key)
-                ->where('settings_type', $settings_type)->first();
+            $config = null;
         } catch (Exception $exception) {
             return new Setting();
         }

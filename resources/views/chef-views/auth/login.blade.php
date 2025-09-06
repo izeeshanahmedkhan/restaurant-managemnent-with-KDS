@@ -7,7 +7,7 @@
 
     @php($icon = \App\Model\BusinessSetting::where(['key' => 'fav_icon'])->first()?->value??'')
     <link rel="shortcut icon" href="">
-    <link rel="icon" type="image/x-icon" href="{{ asset('storage/app/restaurant/' . $icon ?? '') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('storage/restaurant/' . $icon ?? '') }}">
 
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('assets/admin')}}/css/vendor.min.css">
@@ -23,7 +23,7 @@
         <div class="auth-wrapper-left">
             <div class="auth-left-cont">
                 @php($logo = \App\Model\BusinessSetting::where(['key' => 'logo'])->first()?->value??'')
-                <img width="310" src="{{ asset('storage/app/restaurant/' . $logo) }}" alt="logo">
+                <img width="310" src="{{ asset('storage/restaurant/' . $logo) }}" alt="logo">
                 <h2 class="title">Your <span class="c1 d-block text-capitalize">Kitchen</span> <strong class="text--039D55 c1 text-capitalize">Display System</strong></h2>
             </div>
         </div>

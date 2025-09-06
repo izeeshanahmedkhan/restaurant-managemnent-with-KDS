@@ -6,7 +6,7 @@ use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Model\BusinessSetting;
 use App\Models\LoginSetup;
-use App\Models\Setting;
+// Setting model removed
 use App\Traits\HelperTrait;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
@@ -77,8 +77,8 @@ class LoginSetupController extends Controller
     }
 
     public function checkActiveSMSGateway(Request $request) {
-        $activeSMSGatewaysCount = $this->getActiveSMSGatewayCount();
-        return response()->json($activeSMSGatewaysCount);
+        // SMS functionality removed
+        return response()->json(0);
     }
 
     public function checkActiveSocialMedia(Request $request) {

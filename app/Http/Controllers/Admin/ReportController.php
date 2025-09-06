@@ -97,35 +97,7 @@ class ReportController extends Controller
         return back();
     }
 
-    /**
-     * @return Renderable
-     */
-    public function deliverymanReport(): Renderable
-    {
-        $orders = $this->order->with(['customer', 'branch'])->paginate(25);
-        return view('admin-views.report.driver-index', compact('orders'));
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function deliverymanFilter(Request $request): JsonResponse
-    {
-        $fromDate = Carbon::parse($request->formDate)->startOfDay();
-        $toDate = Carbon::parse($request->toDate)->endOfDay();
-
-        $orders = $this->order
-            ->where(['delivery_man_id' => $request['delivery_man']])
-            ->where(['order_status' => 'delivered'])
-            ->whereBetween('created_at', [$fromDate, $toDate])
-            ->get();
-
-        return response()->json([
-            'view' => view('admin-views.order.partials._table', compact('orders'))->render(),
-            'delivered_qty' => $orders->count()
-        ]);
-    }
+    // Delivery man functionality removed
 
     /**
      * @return Renderable

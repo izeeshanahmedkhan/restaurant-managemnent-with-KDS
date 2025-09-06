@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\CentralLogics\Helpers;
-use App\CentralLogics\SMS_module;
 use App\Http\Controllers\Controller;
 use App\Mail\EmailVerification;
 use App\Model\BusinessSetting;
@@ -25,7 +24,6 @@ use Illuminate\Http\JsonResponse;
 use GuzzleHttp\Client;
 use Illuminate\Support\Carbon;
 use Carbon\CarbonInterval;
-use Modules\Gateways\Traits\SmsGateway;
 
 class CustomerAuthController extends Controller
 {
@@ -129,16 +127,7 @@ class CustomerAuthController extends Controller
         $customerName = ($referredUser->f_name ?? '') . ' ' . ($referredUser->l_name ?? '');
         $local = $referredUser->language_code ?? 'en';
 
-        if ($local != 'en'){
-            $translatedMessage = BusinessSetting::with('translations')->where(['key' => 'register_with_referral_code_message'])->first();
-            if (isset($translatedMessage->translations)){
-                foreach ($translatedMessage->translations as $translation){
-                    if ($local == $translation->locale){
-                        $message = $translation->value;
-                    }
-                }
-            }
-        }
+        // Translation functionality removed - always use English
 
         $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName);
         $customerFcmToken = $referredUser->cm_firebase_token ?? null;
@@ -213,11 +202,8 @@ class CustomerAuthController extends Controller
             if (isset($paymentPublishedStatus[0]['is_published'])) {
                 $publishedStatus = $paymentPublishedStatus[0]['is_published'];
             }
-            if($publishedStatus == 1){
-                $response = SmsGateway::send($request['phone'], $token);
-            }else{
-                $response = SMS_module::send($request['phone'], $token);
-            }
+            // SMS functionality removed
+            $response = 'disabled';
 
             return response()->json([
                 'message' => $response,

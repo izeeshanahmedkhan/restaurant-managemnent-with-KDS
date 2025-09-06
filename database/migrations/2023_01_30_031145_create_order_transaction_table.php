@@ -15,7 +15,7 @@ class CreateOrderTransactionTable extends Migration
     {
         Schema::create('order_transactions', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('delivery_man_id')->nullable();
+            // Delivery man functionality removed
             $table->bigInteger('order_id')->nullable();
             $table->decimal('order_amount')->default(0);
             $table->string('received_by')->nullable();

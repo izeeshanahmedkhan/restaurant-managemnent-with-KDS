@@ -20,7 +20,7 @@ class BranchStatusCheck
             return $next($request);
         }
         auth()->guard('branch')->logout();
-        Toastr::warning(\App\CentralLogics\translate('account_is_disabled!'));
+        Toastr::warning(translate('account_is_disabled!'));
         return redirect()->route('branch.auth.login');
 
     }

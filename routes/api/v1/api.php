@@ -2,31 +2,20 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\CustomerAuthController;
-use App\Http\Controllers\Api\V1\Auth\DeliveryManLoginController;
 use App\Http\Controllers\Api\V1\Auth\KitchenLoginController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
-use App\Http\Controllers\Api\V1\BannerController;
+// Banner functionality removed
 use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\ConfigController;
-use App\Http\Controllers\Api\V1\ConversationController;
-use App\Http\Controllers\Api\V1\CouponController;
-use App\Http\Controllers\Api\V1\CuisineController;
 use App\Http\Controllers\Api\V1\CustomerController;
-use App\Http\Controllers\Api\V1\CustomerWalletController;
-use App\Http\Controllers\Api\V1\DeliverymanController;
-use App\Http\Controllers\Api\V1\DeliveryManReviewController;
 use App\Http\Controllers\Api\V1\GuestUserController;
 use App\Http\Controllers\Api\V1\KitchenController;
-use App\Http\Controllers\Api\V1\LoyaltyPointController;
 use App\Http\Controllers\Api\V1\MapApiController;
-use App\Http\Controllers\Api\V1\NotificationController;
-use App\Http\Controllers\Api\V1\OfflinePaymentMethodController;
+// Notification and OfflinePayment functionality removed
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PageController;
 use App\Http\Controllers\Api\V1\ProductController;
-use App\Http\Controllers\Api\V1\TableConfigController;
-use App\Http\Controllers\Api\V1\TableController;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\WishlistController;
 
@@ -52,50 +41,16 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::post('verify-token', [PasswordResetController::class, 'verifyToken']);
         Route::put('reset-password', [PasswordResetController::class, 'resetPasswordSubmit']);
 
-        Route::group(['prefix' => 'delivery-man'], function () {
-            Route::post('register', [DeliveryManLoginController::class, 'registration']);
-            Route::post('login', [DeliveryManLoginController::class, 'login']);
-        });
 
-        Route::group(['prefix' => 'kitchen', 'middleware' => 'app_activate:' . APPS['kitchen_app']['software_id']], function () {
+        Route::group(['prefix' => 'kitchen'], function () {
             Route::post('login', [KitchenLoginController::class, 'login']);
             Route::post('logout', [KitchenLoginController::class, 'logout'])->middleware('auth:kitchen_api');
         });
     });
 
-    Route::group(['prefix' => 'delivery-man', 'middleware' => 'deliveryman_is_active'], function () {
-        Route::get('profile', [DeliverymanController::class, 'getProfile']);
-        Route::put('update-profile', [DeliverymanController::class, 'updateProfile']);
-        Route::get('current-orders', [DeliverymanController::class, 'getCurrentOrders']);
-        Route::get('all-orders', [DeliverymanController::class, 'getAllOrders']);
-        Route::post('record-location-data', [DeliverymanController::class, 'recordLocationData']);
-        Route::get('order-delivery-history', [DeliverymanController::class, 'getOrderHistory']); // not used
-        Route::put('update-order-status', [DeliverymanController::class, 'updateOrderStatus']);
-        Route::put('update-payment-status', [DeliverymanController::class, 'orderPaymentStatusUpdate']);
-        Route::get('order-details', [DeliverymanController::class, 'getOrderDetails']);
-        Route::put('update-fcm-token', [DeliverymanController::class, 'updateFcmToken']);
-        Route::get('order-model', [DeliverymanController::class, 'orderModel']);
-        Route::get('order-statistics', [DeliverymanController::class, 'getOrderStatistics']);
-        Route::get('orders-count', [DeliverymanController::class, 'getOrdersCount']);
-
-        //delivery-man message
-        Route::group(['prefix' => 'message'], function () {
-            Route::post('get-message', [ConversationController::class, 'getOrderMessageForDm']);
-            Route::post('send/{sender_type}', [ConversationController::class, 'storeMessageByOrder']);
-        });
-
-        Route::group(['prefix' => 'reviews', 'middleware' => ['auth:api']], function () {
-            Route::get('/{delivery_man_id}', [DeliveryManReviewController::class, 'getReviews']); //not used
-            Route::get('rating/{delivery_man_id}', [DeliveryManReviewController::class, 'getRating']); //not used
-        });
-    });
-
-    Route::middleware('auth:api')->post('delivery-man/reviews/submit', [DeliveryManReviewController::class, 'submitReview']);
-    Route::get('delivery-man/last-location', [DeliverymanController::class, 'getLastLocation']);
 
     Route::group(['prefix' => 'config'], function () {
         Route::get('/', [ConfigController::class, 'configuration']);
-        Route::get('table', [TableConfigController::class, 'configuration']);
         Route::get('get-direction-api', [ConfigController::class, 'direction_api']);
         Route::get('delivery-fee', [ConfigController::class, 'deliveryFree']);
     });
@@ -107,9 +62,7 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::post('search', [ProductController::class, 'searchedProducts']);
         Route::get('details/{id}', [ProductController::class, 'getProduct']);
         Route::get('related-products/{product_id}', [ProductController::class, 'relatedProducts']);
-        Route::get('reviews/{product_id}', [ProductController::class, 'productReviews']);
-        Route::get('rating/{product_id}', [ProductController::class, 'productRating']);
-        Route::post('reviews/submit', [ProductController::class, 'submitProductReview'])->middleware('auth:api');
+        // Reviews functionality removed
         Route::get('recommended', [ProductController::class, 'recommendedProducts']);
         Route::get('frequently-bought', [ProductController::class, 'frequentlyBoughtProducts']);
         Route::get('search-suggestion', [ProductController::class, 'searchSuggestion']);
@@ -118,13 +71,9 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::get('search-recommended', [ProductController::class, 'searchRecommendedData']);
     });
 
-    Route::group(['prefix' => 'banners', 'middleware' => 'branch_adder'], function () {
-        Route::get('/', [BannerController::class, 'getBanners']);
-    });
+    // Banner functionality removed
 
-    Route::group(['prefix' => 'notifications'], function () {
-        Route::get('/', [NotificationController::class, 'getNotifications']);
-    });
+    // Notification functionality removed
 
     Route::group(['prefix' => 'categories'], function () {
         Route::get('/', [CategoryController::class, 'getCategories']);
@@ -133,9 +82,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::get('products/{category_id}/all', [CategoryController::class, 'getAllProducts'])->middleware('branch_adder');
     });
 
-    Route::group(['prefix' => 'cuisine'], function () {
-        Route::get('list', [CuisineController::class, 'getCuisines']);
-    });
 
     Route::group(['prefix' => 'tag'], function () {
         Route::get('popular', [TagController::class, 'getPopularTags']);
@@ -171,17 +117,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
             Route::post('guest-track', [OrderController::class, 'guestTrackOrder'])->withoutMiddleware(['auth:api', 'is_active']);
             Route::post('details-guest', [OrderController::class, 'getGuestOrderDetails'])->withoutMiddleware(['auth:api', 'is_active']);
         });
-        // Chatting
-        Route::group(['prefix' => 'message'], function () {
-            //customer-admin
-            Route::get('list', [ConversationController::class, 'messageList']);
-            Route::get('get-admin-message', [ConversationController::class, 'getAdminMessage']);
-            Route::post('send-admin-message', [ConversationController::class, 'storeAdminMessage']);
-            //customer-deliveryman
-            Route::get('get-order-message', [ConversationController::class, 'getMessageByOrder']);
-            Route::post('send/{sender_type}', [ConversationController::class, 'storeMessageByOrder']);
-            Route::get('deliveryman-conversation-list', [ConversationController::class, 'getDeliverymanConversationList']);
-        });
 
         Route::group(['prefix' => 'wish-list'], function () {
             Route::get('/', [WishlistController::class, 'wishlist'])->middleware('branch_adder');
@@ -189,17 +124,9 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
             Route::delete('remove', [WishlistController::class, 'removeFromWishlist']);
         });
 
-        Route::post('transfer-point-to-wallet', [CustomerWalletController::class, 'transferLoyaltyPointToWallet']);
-        Route::get('wallet-transactions', [CustomerWalletController::class, 'walletTransactions']);
-        Route::get('loyalty-point-transactions', [LoyaltyPointController::class, 'pointTransactions']);
-        Route::get('bonus/list', [CustomerWalletController::class, 'walletBonusList']);
 
     });
 
-    Route::group(['prefix' => 'coupon'], function () {
-        Route::get('list', [CouponController::class, 'list']);
-        Route::get('apply', [CouponController::class, 'apply']);
-    });
 
     //map api
     Route::group(['prefix' => 'mapapi'], function () {
@@ -209,20 +136,11 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::get('geocode-api', [MapApiController::class, 'geocodeApi']);
     });
 
-    Route::post('subscribe-newsletter', [CustomerController::class, 'subscribeNewsletter']);
 
     Route::get('pages', [PageController::class, 'index']);
 
-    Route::group(['prefix' => 'table', 'middleware' => 'app_activate:' . APPS['table_app']['software_id']], function () {
-        Route::get('list', [TableController::class, 'list']);
-        Route::post('order/place', [TableController::class, 'placeOrder']);
-        Route::get('order/details', [TableController::class, 'orderDetails']);
-        Route::get('product/type', [TableController::class, 'filter_by_product_type']);
-        Route::get('promotional/page', [TableController::class, 'get_promotional_page']);
-        Route::get('order/list', [TableController::class, 'tableOrderList']);
-    });
 
-    Route::group(['prefix' => 'kitchen', 'middleware' => 'auth:kitchen_api', 'app_activate:' . APPS['kitchen_app']['software_id']], function () {
+    Route::group(['prefix' => 'kitchen', 'middleware' => 'auth:kitchen_api'], function () {
         Route::get('profile', [KitchenController::class, 'getProfile']);
         Route::get('order/list', [KitchenController::class, 'getOrderList']);
         Route::get('order/search', [KitchenController::class, 'search']);
@@ -236,9 +154,7 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::post('/add', [GuestUserController::class, 'guestStore']);
     });
 
-    Route::group(['prefix' => 'offline-payment-method'], function () {
-        Route::get('/list', [OfflinePaymentMethodController::class, 'list']);
-    });
+    // Offline payment functionality removed
 
     Route::group(['prefix' => 'branch'], function () {
         Route::get('list', [BranchController::class, 'list']);

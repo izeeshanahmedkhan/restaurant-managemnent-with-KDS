@@ -29,9 +29,7 @@
     </div>
     
     <div class="kds-card__meta">
-        @if($order->delivery_man_id && $order->delivery_man)
-            <div class="kds-card__token">Delivery: {{ $order->delivery_man->f_name ?? 'Assigned' }}</div>
-        @elseif($order->customer_id && $order->customer)
+        @if($order->customer_id && $order->customer)
             <div class="kds-card__token">Customer: {{ $order->customer->f_name ?? 'Guest' }}</div>
         @elseif($order->token)
             <div class="kds-card__token">Token: {{ $order->token }}</div>

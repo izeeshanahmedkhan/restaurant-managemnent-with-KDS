@@ -141,26 +141,7 @@ class KitchenController extends Controller
         $order = $this->order->find($request->order_id);
         $order->order_status = $request->order_status;
 
-        if ($request->order_status == 'done') {
-            $deliverymanFcmToken = null;
-            if (isset($order->delivery_man)) {
-                $deliverymanFcmToken = $order->delivery_man->fcm_token;
-            }
-            try {
-                $data = [
-                    'title' => translate('Order'),
-                    'description' => translate('cooking done'),
-                    'order_id' => $order->id,
-                    'image' => '',
-                    'type' => '',
-                ];
-                if (!is_null($deliverymanFcmToken)) {
-                    Helpers::send_push_notif_to_device($deliverymanFcmToken, $data);
-                }
-            } catch (\Exception $e) {
-                Toastr::warning(translate('Push notification failed for DeliveryMan!'));
-            }
-        }
+        // Delivery man functionality removed
         $isUpdate = $order->update();
 
         if ($isUpdate) {

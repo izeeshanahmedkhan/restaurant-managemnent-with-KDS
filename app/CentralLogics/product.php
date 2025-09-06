@@ -4,7 +4,7 @@ namespace App\CentralLogics;
 
 
 use App\Model\Product;
-use App\Model\Review;
+// Review functionality removed
 use App\Model\Wishlist;
 use Carbon\Carbon;
 
@@ -13,8 +13,8 @@ class ProductLogic
     public static function get_product($id)
     {
         return Product::active()->branchProductAvailability()
-            ->withCount('reviews')
-            ->with(['rating', 'reviews', 'branch_product'])
+            // Review functionality removed
+            ->with(['branch_product'])
             ->where('id', $id)
             ->first();
     }
@@ -26,8 +26,8 @@ class ProductLogic
 
         $key = explode(' ', $name);
         $paginator = Product::active()
-            ->withCount('reviews')
-            ->with(['branch_product', 'rating'])
+            // Review functionality removed
+            ->with(['branch_product'])
             ->whereHas('branch_product.branch', function ($query) {
                 $query->where('status', 1);
             })
@@ -71,7 +71,7 @@ class ProductLogic
     {
         $product_ids = Wishlist::where('user_id', auth('api')->user()->id)->get()->pluck('product_id')->toArray();
         $products = Product::active()
-            ->withCount('reviews')
+            // Review functionality removed
             ->with(['rating', 'branch_product'])
             ->whereHas('branch_product.branch', function ($query) {
                 $query->where('status', 1);
@@ -96,7 +96,7 @@ class ProductLogic
         $key = explode(' ', $name);
 
         $paginator = Product::active()
-            ->withCount('reviews')
+            // Review functionality removed
             ->with(['rating', 'branch_product'])
             ->whereHas('branch_product.branch', function ($query) {
                 $query->where('status', 1);
@@ -139,7 +139,7 @@ class ProductLogic
     {
         $product = Product::find($product_id);
         return Product::active()
-            ->withCount('reviews')
+            // Review functionality removed
             ->with(['rating', 'branch_product'])
             ->whereHas('branch_product.branch', function ($query) {
                 $query->where('status', 1);
@@ -151,7 +151,7 @@ class ProductLogic
             ->get();
     }
 
-    public static function search_products($name, $rating, $category_id, $cuisine_id, $product_type, $sort_by, $limit, $offset, $min_price, $max_price, $is_halal)
+    public static function search_products($name, $rating, $category_id, $product_type, $sort_by, $limit, $offset, $min_price, $max_price, $is_halal)
     {
         $limit = is_null($limit) ? 10 : $limit;
         $offset = is_null($offset) ? 1 : $offset;
@@ -163,12 +163,7 @@ class ProductLogic
         $rating_product_ids = [];
         if (isset($rating)){
             $rating_product_ids = Product::active()
-                ->with('reviews')
-                ->whereHas('reviews', function ($q) use ($rating) {
-                    $q->select('product_id')
-                        ->groupBy('product_id')
-                        ->havingRaw("AVG(rating) >= ?", [$rating]);
-                })
+                // Review functionality removed
                 ->pluck('id')
                 ->toArray();
         }
@@ -189,8 +184,8 @@ class ProductLogic
         $key = explode(' ', $name);
 
         $paginator = Product::active()
-            ->withCount('reviews')
-            ->with(['rating', 'cuisines', 'branch_product'])
+            // Review functionality removed
+            ->with(['rating', 'branch_product'])
             ->whereHas('branch_product.branch', function ($query) {
                 $query->where('status', 1);
             })
@@ -215,13 +210,6 @@ class ProductLogic
                             }
                         });
                     });
-                    $q->orWhereHas('cuisines', function ($query) use ($key) {
-                        $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->where('name', 'like', "%{$value}%");
-                            }
-                        });
-                    });
                 });
             })
             ->when(($max_price != null), function ($query) use ($max_price) {
@@ -236,12 +224,6 @@ class ProductLogic
             })
             ->when(isset($rating), function ($query) use ($rating_product_ids) {
                 $query->whereIn('id', $rating_product_ids);
-            })
-            ->when(isset($cuisine_id), function ($query) use ($cuisine_id) {
-                $cuisineIds = is_array($cuisine_id) ? $cuisine_id : explode(',', $cuisine_id);
-                $query->whereHas('cuisines', function ($q) use ($cuisineIds) {
-                    $q->whereIn('cuisine_id', $cuisineIds);
-                });
             })
             ->when(isset($sort_by) && $sort_by == 'new_arrival', function ($query) use ($sort_by) {
                 return $query->whereBetween('created_at', [Carbon::now()->subMonth(3), Carbon::now()]);
@@ -286,54 +268,9 @@ class ProductLogic
         ];
     }
 
-    public static function get_product_review($id)
-    {
-        $reviews = Review::where('product_id', $id)->get();
-        return $reviews;
-    }
+    // Review functionality removed
 
-    public static function get_rating($reviews)
-    {
-        $rating5 = 0;
-        $rating4 = 0;
-        $rating3 = 0;
-        $rating2 = 0;
-        $rating1 = 0;
-        foreach ($reviews as $key => $review) {
-            if ($review->rating == 5) {
-                $rating5 += 1;
-            }
-            if ($review->rating == 4) {
-                $rating4 += 1;
-            }
-            if ($review->rating == 3) {
-                $rating3 += 1;
-            }
-            if ($review->rating == 2) {
-                $rating2 += 1;
-            }
-            if ($review->rating == 1) {
-                $rating1 += 1;
-            }
-        }
-        return [$rating5, $rating4, $rating3, $rating2, $rating1];
-    }
-
-    public static function get_overall_rating($reviews)
-    {
-        $totalRating = count($reviews);
-        $rating = 0;
-        foreach ($reviews as $key => $review) {
-            $rating += $review->rating;
-        }
-        if ($totalRating == 0) {
-            $overallRating = 0;
-        } else {
-            $overallRating = number_format($rating / $totalRating, 2);
-        }
-
-        return [$overallRating, $totalRating];
-    }
+    // Review rating functionality removed
 
     public static function get_recommended_products($limit, $offset, $name)
     {
@@ -342,8 +279,8 @@ class ProductLogic
         $key = explode(' ', $name);
 
         $paginator = Product::active()
-            ->withCount('reviews')
-            ->with(['branch_product', 'rating'])
+            // Review functionality removed
+            ->with(['branch_product'])
             ->where('is_recommended', 1)
             ->whereHas('branch_product.branch', function ($query) {
                 $query->where('status', 1);
@@ -380,8 +317,8 @@ class ProductLogic
         $offset = is_null($offset) ? 1 : $offset;
 
         $paginator = Product::active()
-            ->withCount('reviews')
-            ->with(['branch_product', 'rating'])
+            // Review functionality removed
+            ->with(['branch_product'])
             ->whereHas('branch_product.branch', function ($query) {
                 $query->where('status', 1);
             })

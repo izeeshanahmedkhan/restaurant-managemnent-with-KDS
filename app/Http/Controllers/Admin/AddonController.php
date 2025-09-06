@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Model\AddOn;
-use App\Model\Translation;
+// Translation model removed
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +15,7 @@ class AddonController extends Controller
 {
     public function __construct(
         private AddOn       $addon,
-        private Translation $translation
+        // Translation model removed
     ){}
 
     /**
@@ -67,21 +67,7 @@ class AddonController extends Controller
         $addon->tax = $request->tax;
         $addon->save();
 
-        $data = [];
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $data[] = array(
-                    'translationable_type' => 'App\Model\AddOn',
-                    'translationable_id' => $addon->id,
-                    'locale' => $key,
-                    'key' => 'name',
-                    'value' => $request->name[$index],
-                );
-            }
-        }
-        if (count($data)) {
-            $this->translation->insert($data);
-        }
+        // Translation functionality removed - always use English
 
         Toastr::success(translate('Addon added successfully!'));
         return back();
@@ -93,7 +79,7 @@ class AddonController extends Controller
      */
     public function edit($id): Renderable
     {
-        $addon = $this->addon->withoutGlobalScopes()->with('translations')->find($id);
+        $addon = $this->addon->withoutGlobalScopes()->with('// translations removed')->find($id);
         return view('admin-views.addon.edit', compact('addon'));
     }
 
@@ -122,17 +108,7 @@ class AddonController extends Controller
         $addon->tax = $request->tax;
         $addon->save();
 
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $this->translation->updateOrInsert(
-                    ['translationable_type' => 'App\Model\AddOn',
-                        'translationable_id' => $addon->id,
-                        'locale' => $key,
-                        'key' => 'name'],
-                    ['value' => $request->name[$index]]
-                );
-            }
-        }
+        // Translation functionality removed - always use English
         Toastr::success(translate('Addon updated successfully!'));
         return redirect()->route('admin.addon.add-new');
     }

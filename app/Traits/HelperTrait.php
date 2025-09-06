@@ -3,7 +3,7 @@
 namespace App\Traits;
 
 use App\CentralLogics\Helpers;
-use App\Models\Setting;
+// Setting model removed
 use Illuminate\Support\Carbon;
 
 trait HelperTrait
@@ -47,21 +47,7 @@ trait HelperTrait
 
     public function getActiveSMSGatewayCount()
     {
-        $dataValues = Setting::where('settings_type', 'sms_config')->get();
-        $count = 0;
-        foreach ($dataValues as $gateway) {
-            $status = isset($gateway->live_values['status']) ? (int)$gateway->live_values['status'] : 0;
-            if ($status == 1) {
-                $count++;
-            }
-        }
-
-        $firebaseOTPVerification = Helpers::get_business_settings('firebase_otp_verification');
-        $firebaseOTPVerificationStatus = (integer)($firebaseOTPVerification ? $firebaseOTPVerification['status'] : 0);
-        if ($firebaseOTPVerificationStatus == 1){
-            $count++;
-        }
-
-        return $count;
+        // SMS functionality removed
+        return 0;
     }
 }

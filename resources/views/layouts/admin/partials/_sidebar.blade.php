@@ -9,11 +9,11 @@
                     <a class="navbar-brand" href="{{route('admin.dashboard')}}" aria-label="Front">
                         <img class="navbar-brand-logo" style="object-fit: contain;"
                              onerror="this.src='{{asset('assets/admin/img/160x160/img2.jpg')}}'"
-                             src="{{asset('storage/app/restaurant/'.$restaurant_logo)}}"
+                             src="{{asset('storage/restaurant/'.$restaurant_logo)}}"
                              alt="Logo">
                         <img class="navbar-brand-logo-mini" style="object-fit: contain;"
                              onerror="this.src='{{asset('assets/admin/img/160x160/img2.jpg')}}'"
-                             src="{{asset('storage/app/restaurant/'.$restaurant_logo)}}" alt="Logo">
+                             src="{{asset('storage/restaurant/'.$restaurant_logo)}}" alt="Logo">
                     </a>
                     <!-- End Logo -->
 
@@ -98,15 +98,7 @@
                                 <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                             </li>
 
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/verify-offline-payment*') ?'show active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link"
-                                   href="{{route('admin.verify-offline-payment', ['pending'])}}" title="{{translate('Verify_Offline_Payment')}}">
-                                    <i class="tio-shopping-basket nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('Verify_Offline_Payment')}}
-                                    </span>
-                                </a>
-                            </li>
+                            <!-- Offline payment verification functionality removed -->
 
                             <li class="navbar-vertical-aside-has-menu {{Request::is('admin/orders/list/*')?'active':''}}">
                                 <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
@@ -248,102 +240,6 @@
                             <!-- End Pages -->
                         @endif
 
-                        @if(Helpers::module_permission_check(MANAGEMENT_SECTION['order_management']))
-
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/table/order/list/*') || Request::is('admin/table/order/details/*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                    <i class="tio-shopping-cart nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('table order')}}
-                                    </span>
-                                    <label class="badge badge-danger">{{translate('addon')}}</label>
-                                </a>
-                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
-                                    style="display: {{Request::is('admin/table/order*')?'block':'none'}}">
-                                    <li class="nav-item {{Request::is('admin/table/order/list/all')?'active':''}}">
-                                        <a class="nav-link" href="{{route('admin.table.order.list',['all'])}}" title="">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate sidebar--badge-container">
-                                                {{translate('all')}}
-                                                <span class="badge badge-soft-info badge-pill ml-1">
-                                                    {{\App\Model\Order::notPos()->dineIn()->notSchedule()->count()}}
-                                                </span>
-                                            </span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/table/order/list/confirmed')?'active':''}}">
-                                        <a class="nav-link" href="{{route('admin.table.order.list',['confirmed'])}}" title="">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate sidebar--badge-container">
-                                                {{translate('confirmed')}}
-                                                <span class="badge badge-soft-info badge-pill ml-1">
-                                                    {{\App\Model\Order::notPos()->dineIn()->where(['order_status'=>'confirmed'])->notSchedule()->count()}}
-                                                </span>
-                                            </span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/table/order/list/cooking')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.table.order.list',['cooking'])}}" title="">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate sidebar--badge-container">
-                                                {{translate('cooking')}}
-                                                <span class="badge badge-soft-warning badge-pill ml-1">
-                                                    {{\App\Model\Order::notPos()->dineIn()->where(['order_status'=>'cooking'])->notSchedule()->count()}}
-                                                </span>
-                                            </span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/table/order/list/done')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.table.order.list',['done'])}}" title="">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate sidebar--badge-container">
-                                                {{translate('Ready_For_Serve')}}
-                                                <span class="badge badge-soft-success badge-pill ml-1">
-                                                    {{\App\Model\Order::notPos()->dineIn()->where(['order_status'=>'done'])->notSchedule()->count()}}
-                                                </span>
-                                            </span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/table/order/list/completed')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.table.order.list',['completed'])}}" title="">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate sidebar--badge-container">
-                                                {{translate('completed')}}
-                                                <span class="badge badge-soft-success badge-pill ml-1">
-                                                    {{\App\Model\Order::notPos()->dineIn()->where(['order_status'=>'completed'])->notSchedule()->count()}}
-                                                </span>
-                                            </span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/table/order/list/canceled')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.table.order.list',['canceled'])}}" title="">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate sidebar--badge-container">
-                                                {{translate('canceled')}}
-                                                <span class="badge badge-soft-danger badge-pill ml-1">
-                                                    {{\App\Model\Order::notPos()->dineIn()->where(['order_status'=>'canceled'])->notSchedule()->count()}}
-                                                </span>
-                                            </span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/table/order/running')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.table.order.running')}}" title="">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate sidebar--badge-container">
-                                                {{translate('on_table')}}
-                                                <span class="badge badge-soft-success badge-pill ml-1">
-                                                    {{\App\Model\Order::with('table_order')->whereHas('table_order', function($q){
-                                                                    $q->where('branch_table_token_is_expired', 0);
-                                                                })->count()}}
-                                                </span>
-                                            </span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <!-- End Pages -->
-                        @endif
-
                         @if(Helpers::module_permission_check(MANAGEMENT_SECTION['product_management']))
                             <li class="nav-item">
                                 <small
@@ -382,16 +278,9 @@
                             </li>
                             <!-- End Pages -->
 
-                            <!-- Cuisine -->
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/cuisine*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('admin.cuisine.add')}}">
-                                    <i class="tio-link nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('cuisine')}}</span>
-                                </a>
-                            </li>
 
                             <!-- Pages -->
-                            <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/addon*') ||Request::is('admin/product*') || Request::is('admin/attribute*') || Request::is('admin/reviews/list')?'active':''}}">
+                            <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/addon*') ||Request::is('admin/product*') || Request::is('admin/attribute*')?'active':''}}">
                                 <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
                                 >
                                     <i class="tio-premium-outlined nav-icon"></i>
@@ -399,7 +288,7 @@
                                         class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('product')}} {{translate('setup')}}</span>
                                 </a>
                                 <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
-                                    style="display: {{Request::is('admin/product*') || Request::is('admin/addon*') || Request::is('admin/attribute*') || Request::is('admin/reviews*')?'block':'none'}}">
+                                    style="display: {{Request::is('admin/product*') || Request::is('admin/addon*') || Request::is('admin/attribute*')?'block':'none'}}">
 {{--                                    <li class="nav-item {{Request::is('admin/attribute*')?'active':''}}">--}}
 {{--                                        <a class="nav-link " href="{{route('admin.attribute.add-new')}}"--}}
 {{--                                           title="{{translate('Add product attribute')}}">--}}
@@ -428,87 +317,15 @@
                                             <span class="text-truncate">{{translate('product_list')}}</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item {{Request::is('admin/product/bulk-import')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.product.bulk-import')}}" title="{{translate('bulk import')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('bulk_import')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/product/bulk-export')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.product.bulk-export')}}" title="{{translate('bulk export')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('bulk_export')}}</span>
-                                        </a>
-                                    </li>
-                                    <!-- REVIEWS -->
-                                    <li class="navbar-vertical-aside-has-menu {{Request::is('admin/reviews*')?'active':''}}">
-                                        <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('admin.reviews.list')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('product')}} {{translate('reviews')}}
-                                    </span>
-                                        </a>
-                                    </li>
+                                    <!-- Product import/export functionality removed -->
+                                    <!-- Reviews functionality removed -->
                                 </ul>
                             </li>
                             <!-- End Pages -->
                         @endif
 
-{{--                        PROMOTION MANAGEMENT--}}
-                        @if(Helpers::module_permission_check(MANAGEMENT_SECTION['promotion_management']))
-                            <li class="nav-item">
-                                <small
-                                    class="nav-subtitle">{{translate('promotion')}} {{translate('management')}}</small>
-                                <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                            </li>
-
-                            <!-- BANNER -->
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/banner*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('admin.banner.list')}}">
-                                    <i class="tio-image nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('banner')}}</span>
-                                </a>
-                            </li>
-
-                            <!-- COUPON -->
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/coupon*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('admin.coupon.add-new')}}">
-                                    <i class="tio-gift nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('coupon')}}</span>
-                                </a>
-                            </li>
-
-                            <!-- NOTIFICATION -->
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/notification*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('admin.notification.add-new')}}">
-                                    <i class="tio-notifications nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('send')}} {{translate('notification')}}
-                                    </span>
-                                </a>
-                            </li>
-                        @endif
-{{--                        PROMOTION MANAGEMENT END--}}
 
 
-{{--                        HELP & SUPPORT MANAGEMENT--}}
-                        @if(Helpers::module_permission_check(MANAGEMENT_SECTION['help_and_support_management']))
-                            <li class="nav-item">
-                                <small class="nav-subtitle"
-                                       title="Layouts">{{translate('Help_&_Support_Section')}}</small>
-                                <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                            </li>
-                            <!-- MESSAGE -->
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/message*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('admin.message.list')}}">
-                                    <i class="tio-messages nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('messages')}}
-                                    </span>
-                                </a>
-                            </li>
-                        @endif
-{{--                        HELP & SUPPORT MANAGEMENT END--}}
 
 {{--                        REPORT & ANALYTICS MANAGEMENT--}}
                         @if(Helpers::module_permission_check(MANAGEMENT_SECTION['report_and_analytics_management']))
@@ -587,102 +404,11 @@
                                 </ul>
                             </li>
 
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/customer/wallet*') ?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                    <i class="tio-wallet nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('customer wallet')}}
-                                    </span>
-                                </a>
-                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display: {{Request::is('admin/customer/wallet/add-fund') || Request::is('admin/customer/wallet/report') || Request::is('admin/customer/wallet/bonus*')?'block':''}}; top: 831.076px;">
-                                    <li class="nav-item {{Request::is('admin/customer/wallet/add-fund') ? 'active' : ''}}">
-                                        <a class="nav-link" href="{{route('admin.customer.wallet.add-fund')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('add_fund')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/customer/wallet/report') ? 'active' : ''}}">
-                                        <a class="nav-link" href="{{route('admin.customer.wallet.report')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('report')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/customer/wallet/bonus*') ? 'active' : ''}}">
-                                        <a class="nav-link" href="{{route('admin.customer.wallet.bonus.index')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('wallet_bonus_setup')}}</span>
-                                        </a>
-                                    </li>
 
-                                </ul>
-                            </li>
-
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/customer/loyalty-point/report') ?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                    <i class="tio-medal nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('customer loyalty point')}}
-                                    </span>
-                                </a>
-                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display: {{Request::is('admin/customer/loyalty-point/report')?'block':''}}; top: 831.076px;">
-                                    <li class="nav-item {{Request::is('admin/customer/loyalty-point/report') ? 'active' : ''}}">
-                                        <a class="nav-link" href="{{route('admin.customer.loyalty-point.report')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('report')}}</span>
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            </li>
-                            <!-- Pages -->
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/customer/subscribed-email*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link"
-                                   href="{{route('admin.customer.subscribed_emails')}}">
-                                    <i class="tio-email-outlined nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('Subscribed Emails')}}
-                                    </span>
-                                </a>
-                            </li>
                             <!-- End Pages -->
                         @endif
 
                         @if(Helpers::module_permission_check(MANAGEMENT_SECTION['user_management']))
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/delivery-man*')? 'active' : ''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                    <i class="tio-user nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                            {{translate('deliveryman')}}
-                                        </span>
-                                </a>
-                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display:  {{Request::is('admin/delivery-man*')? 'block' : ''}}; top: 831.076px;">
-                                    <li class="nav-item {{Request::is('admin/delivery-man/list')? 'active' : ''}}">
-                                        <a class="nav-link" href="{{route('admin.delivery-man.list')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('Delivery_Man_List')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/delivery-man/add') ?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.delivery-man.add')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('Add_New_Delivery_Man')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/delivery-man/pending/list') || Request::is('admin/delivery-man/denied/list')?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.delivery-man.pending')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('New Joining Request')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/delivery-man/reviews/list')? 'active' : ''}}">
-                                        <a class="nav-link" href="{{route('admin.delivery-man.reviews.list')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('Delivery_Man_Reviews')}}</span>
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            </li>
                         @endif
 
                         @if(Helpers::module_permission_check(MANAGEMENT_SECTION['user_management']))
@@ -767,44 +493,6 @@
 
 
 
-                    <!-- Table Management-->
-                    @if(Helpers::module_permission_check(MANAGEMENT_SECTION['table_management']))
-                            <li class="nav-item">
-                                <small class="nav-subtitle">{{translate('table')}} {{translate('section')}}</small>
-                                <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                            </li>
-
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/table/list') || Request::is('admin/table/update*') || Request::is('admin/promotion/create') || Request::is('admin/promotion/edit*') || Request::is('admin/table/index')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                    <i class="tio-gift nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                            {{translate('table')}}
-                                        </span>
-                                    <label class="badge badge-danger">{{translate('addon')}}</label>
-                                </a>
-                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="top: 391.823px; display: {{Request::is('admin/table/list') || Request::is('admin/table/update*') || Request::is('admin/table/index') || Request::is('admin/promotion/*')?'block':''}};">
-                                    <li class="nav-item {{Request::is('admin/table/list') || Request::is('admin/table/update*') ?'active':''}}">
-                                        <a class="nav-link " href="{{route('admin.table.list')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('list')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/table/index')?'active':''}}">
-                                        <a class="nav-link" href="{{route('admin.table.index')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('availability')}}</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item {{Request::is('admin/promotion/create') || Request::is('admin/promotion/edit*')?'active':''}}">
-                                        <a class="nav-link" href="{{route('admin.promotion.create')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="text-truncate">{{translate('promotion_setup')}}</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        @endif
-                    <!-- Table Management End-->
 
                         <!-- BRANCH -->
 
@@ -822,14 +510,6 @@
                         </li>
                         <!-- END Business_Setup -->
 
-                            <!-- Email setup -->
-                            <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/business-settings/email-setup*') ? 'active' : '' }}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link"  href="{{ route('admin.business-settings.email-setup',['user','new-order']) }}">
-                                    <i class="tio-email nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Email_Template')}}</span>
-                                </a>
-                            </li>
-                            <!-- END email setup -->
 
                         <!--BRANCH SETUP -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/branch*')?'active':''}}">
@@ -874,109 +554,12 @@
                                     </a>
                                 </li>
 
-                                <!-- Social Link page -->
-                                <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/web-app/social-media')?'active':''}}">
-                                    <a class="nav-link " href="{{route('admin.business-settings.web-app.third-party.social-media')}}"
-                                       title="{{\App\CentralLogics\translate('Social Media Links')}}">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('Social Media')}}</span>
-                                    </a>
-
-                                </li>
+                                <!-- Social media functionality removed -->
                             </ul>
                         </li>
                         @endif
 
-                        @if(Helpers::module_permission_check(MANAGEMENT_SECTION['system_management']))
-                        <!-- 3rd Party -->
-
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/web-app/third-party*')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                    <i class="tio-running nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('3rd_Party')}}</span>
-                                </a>
-                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display: {{Request::is('admin/business-settings/web-app/third-party*')?'block':'none'}}">
-                                    <!-- Page Setup -->
-                                    <li class="nav-item {{Request::is('admin/business-settings/web-app/third-party/payment-method') || Request::is('admin/business-settings/web-app/third-party/mail-config') || Request::is('admin/business-settings/web-app/third-party/sms-module')||
-                                                        Request::is('admin/business-settings/web-app/third-party/map-api-settings') || Request::is('admin/business-settings/web-app/third-party/recaptcha') ||
-                                                        Request::is('admin/business-settings/web-app/third-party/social-login') || Request::is('admin/business-settings/web-app/third-party/chat') ||
-                                                        Request::is('admin/business-settings/web-app/third-party/firebase-otp-verification')?'active':''}}">
-                                        <a class="nav-link" href="{{route('admin.business-settings.web-app.payment-method')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('3rd Party Configurations')}}</span>
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item {{Request::is('admin/business-settings/web-app/third-party/offline-payment*')?'active':''}}">
-                                        <a class="nav-link" href="{{route('admin.business-settings.web-app.third-party.offline-payment.list')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Offline Payment Method')}}</span>
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item {{Request::is('admin/business-settings/web-app/third-party/fcm*')?'active':''}}">
-                                        <a class="nav-link" href="{{route('admin.business-settings.web-app.third-party.fcm-index')}}">
-                                            <span class="tio-circle nav-indicator-icon"></span>
-                                            <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Firebase Notification')}}</span>
-                                        </a>
-                                    </li>
-{{--                                      <li class="nav-item {{Request::is('admin/business-settings/web-app/third-party/marketing-tools*')?'active':''}}">--}}
-{{--                                        <a class="nav-link" href="{{route('admin.business-settings.web-app.third-party.marketing-tools')}}">--}}
-{{--                                            <span class="tio-circle nav-indicator-icon"></span>--}}
-{{--                                            <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Marketing Tools')}}</span>--}}
-{{--                                        </a>--}}
-{{--                                    </li>--}}
-
-                                </ul>
-                            </li>
-
-                        <!-- End 3rd Party -->
-
-                        <!-- SYSTEM SETTINGS -->
-                        <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/web-app/system-setup*')?'active':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('admin.business-settings.web-app.system-setup.language.index')}}">
-                                <i class="tio-security-on-outlined nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('System Setup')}}</span>
-                            </a>
-                        </li>
-
-                            <li class="nav-item">
-                                <small class="nav-subtitle">{{translate('system')}} {{translate('addon')}}</small>
-                                <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                            </li>
-
-                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/system-addon')?'active':''}}">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link"
-                                   href="{{route('admin.system-addon.index')}}" title="{{translate('System Addons')}}">
-                                    <i class="tio-add-circle-outlined nav-icon"></i>
-                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('System Addons')}}
-                                    </span>
-                                </a>
-                            </li>
-
-                            @if(count(config('addon_admin_routes'))>0)
-                                <li class="navbar-vertical-aside-has-menu {{Request::is('admin/payment/configuration/*') || Request::is('admin/sms/configuration/*')?'active':''}} mb-5">
-                                    <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:" >
-                                        <i class="tio-puzzle nav-icon"></i>
-                                        <span  class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Addon Menus')}}</span>
-                                    </a>
-                                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display: {{Request::is('admin/payment/configuration/*') || Request::is('admin/sms/configuration/*')?'block':'none'}}">
-                                        @foreach(config('addon_admin_routes') as $routes)
-                                            @foreach($routes as $route)
-                                                <li class="navbar-vertical-aside-has-menu {{Request::is($route['path'])  ? 'active' :''}}">
-                                                    <a class="js-navbar-vertical-aside-menu-link nav-link "
-                                                       href="{{ $route['url'] }}" title="{{ translate($route['name']) }}">
-                                                        <span class="tio-circle nav-indicator-icon"></span>
-                                                        <span class="text-truncate">{{ translate($route['name']) }}</span>
-                                                    </a>
-                                                </li>
-                                            @endforeach
-                                        @endforeach
-                                    </ul>
-                                </li>
-                            @endif
-                        @endif
+                        <!-- Third party functionality removed -->
                         <!--END SYSTEM SETTINGS -->
                         <li class="nav-item pt-10">
                             <div class=""></div>

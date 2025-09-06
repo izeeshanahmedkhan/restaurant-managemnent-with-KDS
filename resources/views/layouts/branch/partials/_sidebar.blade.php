@@ -8,11 +8,11 @@
                     <a class="navbar-brand" href="{{route('branch.dashboard')}}" aria-label="Front">
                         <img class="navbar-brand-logo" style="object-fit: contain;"
                              onerror="this.src='{{asset('assets/admin/img/160x160/img2.jpg')}}'"
-                             src="{{asset('storage/app/restaurant/'.$restaurantLogo)}}"
+                             src="{{asset('storage/restaurant/'.$restaurantLogo)}}"
                              alt="{{ translate('logo') }}">
                         <img class="navbar-brand-logo-mini" style="object-fit: contain;"
                              onerror="this.src='{{asset('assets/admin/img/160x160/img2.jpg')}}'"
-                             src="{{asset('storage/app/restaurant/'.$restaurantLogo)}}" alt="{{ translate('logo') }}">
+                             src="{{asset('storage/restaurant/'.$restaurantLogo)}}" alt="{{ translate('logo') }}">
                     </a>
 
                     <button type="button" class="js-navbar-vertical-aside-toggle-invoker navbar-vertical-aside-toggle btn btn-icon btn-xs btn-ghost-dark">
@@ -99,15 +99,7 @@
                         </li>
                         <!-- End KDS -->
 
-                        <li class="navbar-vertical-aside-has-menu {{Request::is('branch/verify-offline-payment*') ?'show active':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link"
-                               href="{{route('branch.verify-offline-payment', ['pending'])}}" title="{{translate('Verify_Offline_Payment')}}">
-                                <i class="tio-shopping-basket nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                        {{translate('Verify_Offline_Payment')}}
-                                    </span>
-                            </a>
-                        </li>
+                        <!-- Offline payment verification functionality removed -->
 
                         <li class="navbar-vertical-aside-has-menu {{Request::is('branch/orders/list*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
@@ -235,101 +227,7 @@
                             </ul>
                         </li>
 
-                        <li class="navbar-vertical-aside-has-menu {{Request::is('branch/table/order/list/*')?'active':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                <i class="tio-shopping-cart nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{translate('table order')}}
-                                </span>
-                                <label class="badge badge-danger">{{translate('addon')}}</label>
-                            </a>
-                            <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
-                                style="display: {{Request::is('branch/table/order*')?'block':'none'}}">
-                                <li class="nav-item {{Request::is('branch/table/order/list/all')?'active':''}}">
-                                    <a class="nav-link" href="{{route('branch.table.order.list',['all'])}}" title="">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate sidebar--badge-container">
-                                                {{translate('all')}}
-                                                <span class="badge badge-soft-info badge-pill ml-1">
-                                                    {{\App\Model\Order::dineIn()->where(['branch_id' => auth('branch')->id()])->count()}}
-                                                </span>
-                                            </span>
-                                    </a>
-                                </li>
-                                <li class="nav-item {{Request::is('branch/table/order/list/confirmed')?'active':''}}">
-                                    <a class="nav-link" href="{{route('branch.table.order.list',['confirmed'])}}"
-                                       title="">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate sidebar--badge-container">
-                                                {{translate('confirmed')}}
-                                            <span class="badge badge-soft-success badge-pill ml-1">
-                                                {{\App\Model\Order::dineIn()->where(['order_status'=>'confirmed'])->where(['branch_id' => auth('branch')->id()])->count()}}
-                                            </span>
-                                        </span>
-                                    </a>
-                                </li>
-                                <li class="nav-item {{Request::is('branch/table/order/list/cooking')?'active':''}}">
-                                    <a class="nav-link " href="{{route('branch.table.order.list',['cooking'])}}"
-                                       title="">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate sidebar--badge-container">
-                                                {{translate('cooking')}}
-                                                <span class="badge badge-soft-warning badge-pill ml-1">
-                                                    {{\App\Model\Order::dineIn()->where(['order_status'=>'cooking'])->where(['branch_id' => auth('branch')->id()])->count()}}
-                                                </span>
-                                            </span>
-                                    </a>
-                                </li>
-                                <li class="nav-item {{Request::is('branch/table/order/list/done')?'active':''}}">
-                                    <a class="nav-link " href="{{route('branch.table.order.list',['done'])}}" title="">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate sidebar--badge-container">
-                                                {{translate('Ready For Serve')}}
-                                                <span class="badge badge-soft-dark badge-pill ml-1">
-                                                    {{\App\Model\Order::dineIn()->where(['order_status'=>'done'])->where(['branch_id' => auth('branch')->id()])->count()}}
-                                                </span>
-                                            </span>
-                                    </a>
-                                </li>
-                                <li class="nav-item {{Request::is('branch/table/order/list/completed')?'active':''}}">
-                                    <a class="nav-link " href="{{route('branch.table.order.list',['completed'])}}"
-                                       title="">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate sidebar--badge-container">
-                                                {{translate('completed')}}
-                                                <span class="badge badge-soft-success badge-pill ml-1">
-                                                    {{\App\Model\Order::dineIn()->where(['order_status'=>'completed'])->where(['branch_id' => auth('branch')->id()])->count()}}
-                                                </span>
-                                            </span>
-                                    </a>
-                                </li>
-                                <li class="nav-item {{Request::is('branch/table/order/list/canceled')?'active':''}}">
-                                    <a class="nav-link " href="{{route('branch.table.order.list',['canceled'])}}"
-                                       title="">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate sidebar--badge-container">
-                                                {{translate('canceled')}}
-                                                <span class="badge badge-soft-danger badge-pill ml-1">
-                                                    {{\App\Model\Order::dineIn()->where(['order_status'=>'canceled'])->where(['branch_id' => auth('branch')->id()])->count()}}
-                                                </span>
-                                            </span>
-                                    </a>
-                                </li>
-                                <li class="nav-item {{Request::is('branch/table/order/running')?'active':''}}">
-                                    <a class="nav-link " href="{{route('branch.table.order.running')}}" title="">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate sidebar--badge-container">
-                                                {{translate('On Table')}}
-                                                <span class="badge badge-soft-success badge-pill ml-1">
-                                                    {{\App\Model\Order::with('table_order')->whereHas('table_order', function($q){
-                                                                    $q->where('branch_table_token_is_expired', 0);
-                                                                })->where(['branch_id' => auth('branch')->id()])->count()}}
-                                                </span>
-                                            </span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
+                        {{-- Table management functionality removed --}}
 
                         <li class="nav-item">
                             <small class="nav-subtitle">{{translate('product')}} {{translate('section')}}</small>
@@ -356,40 +254,7 @@
                         </li>
 
 
-                        <li class="nav-item">
-                            <small class="nav-subtitle">{{translate('table')}} {{translate('section')}}</small>
-                            <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                        </li>
-
-
-                        <li class="navbar-vertical-aside-has-menu {{Request::is('branch/table/list') || Request::is('branch/branch-promotion/*') || Request::is('branch/table/index') ?'show':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
-                                <i class="tio-gift nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('table')}}</span>
-                                <label class="badge badge-danger">{{translate('addon')}}</label>
-                            </a>
-                            <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display: {{Request::is('branch/table/*') || Request::is('branch/promotion*')? 'block' : ''}}">
-                                <li class="nav-item ">
-                                    <a class="nav-link {{Request::is('branch/table/list')? 'active' : ''}}" href="{{route('branch.table.list')}}" title="{{translate('list')}}">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{translate('list')}}</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item ">
-                                    <a class="nav-link {{Request::is('branch/table/index')? 'active' : ''}}" href="{{route('branch.table.index')}}" title="{{translate('list')}}">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{translate('availability')}}</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link  {{Request::is('branch/promotion/*')? 'active' : ''}}" href="{{route('branch.promotion.create')}}" title="List">
-                                        <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{translate('table_promotion')}}
-                                    </span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
+                        <!-- Table management functionality removed -->
 
                         <li class="nav-item">
                             <small

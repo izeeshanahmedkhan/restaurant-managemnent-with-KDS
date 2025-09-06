@@ -263,7 +263,6 @@
   'Add_New_Branch' => 'Add New Branch',
   'branch_Location' => 'Branch Location',
   'Payment Setup' => 'Payment Setup',
-  'third_party' => 'Third party',
   'Payment_Methods' => 'Payment Methods',
   'Mail_Config' => 'Mail Config',
   'SMS_Config' => 'SMS Config',

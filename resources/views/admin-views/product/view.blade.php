@@ -147,71 +147,7 @@
 
                     <div class="col-xxl-4 col-lg-4">
                         <ul class="list-unstyled list-unstyled-py-2 mb-0 bg-color rounded pt-lg-0 pt-2 pb-3 px-3">
-                            <div class="d-flex align-items-center review-counting-wrap gap-3 mb-2">
-                                <h4 class="fz-34 text-c1  mb-0">
-                                    <i class="tio-star fz-34 mb-3"></i><span class="c1">{{count($product->rating)>0?number_format($product->rating[0]->average, 1, '.', ' '):0}}</span><span class="text-muted fz-20">/5</span>
-                                </h4>
-                                <p class="mb-0 left-line"> {{$product->reviews->count()}} {{translate('reviews')}}
-                                    <span class="badge badge-soft-dark badge-pill ml-1"></span>
-                                </p>
-                            </div>
-                            @php($total=$product->reviews->count())
-                            <li class="d-flex align-items-center font-size-sm">
-                                @php($five=\App\CentralLogics\Helpers::rating_count($product['id'],5))
-                                <span
-                                    class="progress-name text-c3">{{translate('Excellent')}}</span>
-                                <div class="progress flex-grow-1">
-                                    <div class="progress-bar" role="progressbar"
-                                         style="width: {{$total==0?0:($five/$total)*100}}%;"
-                                         aria-valuenow="{{$total==0?0:($five/$total)*100}}"
-                                         aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <span class="ml-3">{{$five}}</span>
-                            </li>
-                            <li class="d-flex align-items-center font-size-sm">
-                                @php($four=\App\CentralLogics\Helpers::rating_count($product['id'],4))
-                                <span class="progress-name text-c3">{{translate('Good')}}</span>
-                                <div class="progress flex-grow-1">
-                                    <div class="progress-bar" role="progressbar"
-                                         style="width: {{$total==0?0:($four/$total)*100}}%;"
-                                         aria-valuenow="{{$total==0?0:($four/$total)*100}}"
-                                         aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <span class="ml-3">{{$four}}</span>
-                            </li>
-                            <li class="d-flex align-items-center font-size-sm">
-                                @php($three=\App\CentralLogics\Helpers::rating_count($product['id'],3))
-                                <span class="progress-name text-c3">{{translate('Average')}}</span>
-                                <div class="progress flex-grow-1">
-                                    <div class="progress-bar" role="progressbar"
-                                         style="width: {{$total==0?0:($three/$total)*100}}%;"
-                                         aria-valuenow="{{$total==0?0:($three/$total)*100}}"
-                                         aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <span class="ml-3">{{$three}}</span>
-                            </li>
-                            <li class="d-flex align-items-center font-size-sm">
-                                @php($two=\App\CentralLogics\Helpers::rating_count($product['id'],2))
-                                <span class="progress-name text-c3">{{translate('Below_Average')}}</span>
-                                <div class="progress flex-grow-1">
-                                    <div class="progress-bar" role="progressbar"
-                                         style="width: {{$total==0?0:($two/$total)*100}}%;"
-                                         aria-valuenow="{{$total==0?0:($two/$total)*100}}"
-                                         aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <span class="ml-3">{{$two}}</span>
-                            </li>
-                            <li class="d-flex align-items-center font-size-sm">
-                                @php($one=\App\CentralLogics\Helpers::rating_count($product['id'],1))
-                                <span class="progress-name text-c3">{{translate('Poor')}}</span>
-                                <div class="progress flex-grow-1">
-                                    <div class="progress-bar" role="progressbar"
-                                         style="width: {{$total==0?0:($one/$total)*100}}%;"
-                                         aria-valuenow="{{$total==0?0:($one/$total)*100}}"
-                                         aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <span class="ml-3">{{$one}}</span>
-                            </li>
+                            <!-- Review functionality removed -->
                         </ul>
                     </div>
                 </div>
@@ -227,7 +163,6 @@
                                 <th class="bg-color">{{translate('General Info')}}</th>
                                 <th class="bg-color">{{translate('Price Information')}}</th>
                                 <th class="bg-color">{{translate('Availability & Stock')}}</th>
-                                <th class="bg-color">{{translate('Cuisine')}}</th>
                                 <th class="bg-color">{{translate('Addons')}}</th>
                             </tr>
                         </thead>
@@ -237,7 +172,7 @@
                                     <div class="d-flex flex-column gap-2">
                                         <div class="d-flex align-items-center gap-1">
                                             <div class="min-w-100">{{ translate('Category') }}</div>
-                                            : <strong> {{ $product?->category['name'] ?? \App\CentralLogics\translate('not_available')}}</strong>
+                                            : <strong> {{ $product?->category['name'] ?? translate('not_available')}}</strong>
                                         </div>
                                         @if($product?->subCategory)
                                             <div class="d-flex align-items-center gap-1">
@@ -284,11 +219,6 @@
                                             : <strong>{{date(config('time_format'), strtotime($product['available_time_starts']))}} - {{date(config('time_format'), strtotime($product['available_time_ends']))}}</strong>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    @foreach($product->cuisines as $cuisine)
-                                        <strong class="text-capitalize">{{$cuisine?->name}} </strong> <br>
-                                    @endforeach
                                 </td>
                                 <td>
                                     @foreach(\App\Model\AddOn::whereIn('id',json_decode($product['add_ons'],true))->get() as $addon)

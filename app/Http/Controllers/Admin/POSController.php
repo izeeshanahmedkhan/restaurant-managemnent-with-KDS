@@ -10,13 +10,11 @@ use App\Model\Branch;
 use App\Model\BusinessSetting;
 use App\Model\Category;
 use App\Model\CustomerAddress;
-use App\Model\DeliveryMan;
-use App\Model\Notification;
+// Notification functionality removed
 use App\Model\Product;
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\ProductByBranch;
-use App\Model\Table;
 use App\Models\DeliveryChargeByArea;
 use App\Models\OrderChangeAmount;
 use App\User;
@@ -46,7 +44,6 @@ class POSController extends Controller
 {
     public function __construct(
         private User            $user,
-        private Table           $table,
         private Admin           $admin,
         private Branch          $branch,
         private Product         $product,
@@ -54,8 +51,8 @@ class POSController extends Controller
         private ProductByBranch $productByBranch,
         private Order           $order,
         private OrderDetail     $order_detail,
-        private Notification    $notification,
-        private DeliveryMan     $delivery_man,
+        // Notification functionality removed
+        // Delivery man functionality removed
         private BusinessSetting $business_setting
     ){}
 
@@ -76,8 +73,6 @@ class POSController extends Controller
         $key = explode(' ', $keyword);
 
         $selected_customer = $this->user->where('id', session('customer_id'))->first();
-        $selected_table = $this->table->where('id', session('table_id'))->first();
-        $tables = $this->table->where(['is_active' => 1, 'branch_id' => $selected_branch])->get();
 
         $products = $this->product
             ->with(['branch_products' => function ($q) use ($selected_branch) {
@@ -102,7 +97,7 @@ class POSController extends Controller
 
         $current_branch = $this->admin->find(auth('admin')->id());
         $branches = $this->branch->select('id', 'name')->get();
-        return view('admin-views.pos.index', compact('categories', 'products', 'category', 'keyword', 'current_branch', 'branches', 'selected_customer', 'selected_table', 'tables'));
+        return view('admin-views.pos.index', compact('categories', 'products', 'category', 'keyword', 'current_branch', 'branches', 'selected_customer'));
     }
 
     /**
@@ -405,22 +400,6 @@ class POSController extends Controller
 
         $order_type = session()->has('order_type') ? session()->get('order_type') : 'take_away';
 
-        if ($order_type == 'dine_in'){
-            if (!session()->has('table_id')){
-                Toastr::error(translate('please select a table number'));
-                return back();
-            }
-            if (!session()->has('people_number')){
-                Toastr::error(translate('please enter people number'));
-                return back();
-            }
-
-            $table = Table::find(session('table_id'));
-            if (isset($table) && session('people_number') > $table->capacity  || session('people_number') < 1 ) {
-                Toastr::error(translate('enter valid people number between 1 to '. $table->capacity));
-                return back();
-            }
-        }
 
         $delivery_charge = 0;
         $distance = 0;
@@ -474,11 +453,9 @@ class POSController extends Controller
         $order->id = $order_id;
 
         $order->user_id = session()->get('customer_id') ?? null;
-        $order->coupon_discount_title = $request->coupon_discount_title == 0 ? null : 'coupon_discount_title';
         $order->payment_status = ($order_type == 'take_away') ? 'paid' : (($order_type == 'dine_in' && $request->type != 'pay_after_eating') ? 'paid' : 'unpaid');
         $order->order_status = 'confirmed' ; // All orders start as confirmed for KDS
         $order->order_type = ($order_type == 'take_away') ? 'pos' : (($order_type == 'dine_in') ? 'dine_in' : (($order_type == 'home_delivery') ? 'delivery' : null));
-        $order->coupon_code = $request->coupon_code ?? null;
         $order->payment_method = $request->type;
         $order->transaction_reference = $request->transaction_reference ?? null;
        // $order->delivery_charge = $delivery_charge;
@@ -598,10 +575,7 @@ class POSController extends Controller
             $order->total_tax_amount = $total_tax_amount;
             $order->order_amount = $total_price + $total_tax_amount + $total_addon_tax;
             $order->delivery_charge = $delivery_charge;
-            $order->coupon_discount_amount = 0.00;
             $order->branch_id = session()->get('branch_id');
-            $order->table_id = session()->get('table_id');
-            $order->number_of_people = session()->get('people_number');
 
             if (session('branch_id')) {
                 $order->save();
@@ -623,29 +597,13 @@ class POSController extends Controller
                 session(['last_order' => $order->id]);
                 session()->forget('customer_id');
                 session()->forget('branch_id');
-                session()->forget('table_id');
                 session()->forget('people_number');
                 session()->forget('address');
                 session()->forget('order_type');
 
                 Toastr::success(translate('order_placed_successfully'));
 
-                //send notification to kitchen
-                if ($order->order_type == 'dine_in') {
-                    $notification = $this->notification;
-                    $notification->title = "You have a new order from POS - (Order Confirmed). ";
-                    $notification->description = $order->id;
-                    $notification->status = 1;
-                    $notification->order_id =  $order->id;
-                    $notification->order_status = $order->order_status;
-
-                    try {
-                        Helpers::send_push_notif_to_topic(data: $notification, topic: "kitchen-{$order->branch_id}", type: 'general', isNotificationPayloadRemove: true);
-                        Toastr::success(translate('Notification sent successfully!'));
-                    } catch (\Exception $e) {
-                        Toastr::warning(translate('Push notification failed!'));
-                    }
-                }
+                // Notification functionality removed
                 //send notification to customer for home delivery
                 if ($order->order_type == 'delivery'){
                     $message = Helpers::order_status_update_message('confirmed');
@@ -654,17 +612,7 @@ class POSController extends Controller
                     $local = $customer?->language_code ?? 'en';
                     $customerName = $customer?->f_name . ' '. $customer?->l_name ?? '';
 
-                    if ($local != 'en'){
-                        $statusKey = Helpers::order_status_message_key('confirmed');
-                        $translatedMessage = $this->business_setting->with('translations')->where(['key' => $statusKey])->first();
-                        if (isset($translatedMessage->translations)){
-                            foreach ($translatedMessage->translations as $translation){
-                                if ($local == $translation->locale){
-                                    $message = $translation->value;
-                                }
-                            }
-                        }
-                    }
+                    // Translation functionality removed - always use English
                     $restaurantName = Helpers::get_business_settings('restaurant_name');
                     $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName,  order_id: $order_id);
 
@@ -717,7 +665,6 @@ class POSController extends Controller
     public function emptyCart(Request $request): JsonResponse
     {
         session()->forget('cart');
-        Session::forget('table_id');
         Session::forget('customer_id');
         Session::forget('people_number');
         session()->forget('address');
@@ -817,14 +764,8 @@ class POSController extends Controller
             return back();
         }
 
-        $deliverymen = $this->delivery_man->where(['is_active'=>1])
-            ->where(function($query) use ($order) {
-                $query->where('branch_id', $order->branch_id)
-                    ->orWhere('branch_id', 0);
-            })
-            ->get();
-
-        return view('admin-views.order.order-view', compact('order', 'deliverymen'));
+        // Delivery man functionality removed
+        return view('admin-views.order.order-view', compact('order'));
     }
 
     /**
@@ -864,8 +805,6 @@ class POSController extends Controller
     {
         session()->forget('customer_id');
         session()->forget('branch_id');
-        session()->forget('table_id');
-        session()->forget('people_number');
         session()->forget('address');
         session()->forget('order_type');
 
@@ -982,7 +921,6 @@ class POSController extends Controller
     public function session_destroy(Request $request): JsonResponse
     {
         Session::forget('cart');
-        Session::forget('table_id');
         Session::forget('customer_id');
         Session::forget('people_number');
         session()->forget('address');

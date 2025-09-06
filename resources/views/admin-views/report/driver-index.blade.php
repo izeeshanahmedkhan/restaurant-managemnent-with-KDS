@@ -578,7 +578,7 @@
                 if (fr > to) {
                     $('#from_date').val('');
                     $('#to_date').val('');
-                    toastr.error('{{ \App\CentralLogics\translate('Invalid date range!') }}', Error, {
+                    toastr.error('{{ translate('Invalid date range!') }}', Error, {
                         CloseButton: true,
                         ProgressBar: true
                     });

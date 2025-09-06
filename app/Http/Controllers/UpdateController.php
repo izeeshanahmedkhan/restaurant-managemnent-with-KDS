@@ -11,7 +11,6 @@ use App\Model\BusinessSetting;
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Models\LoginSetup;
-use App\Models\Setting;
 use App\Traits\ActivationClass;
 use App\User;
 use App\Models\DeliveryChargeSetup;
@@ -210,15 +209,7 @@ class UpdateController extends Controller
             ]);
         }
 
-        if (BusinessSetting::where(['key' => 'delivery_management'])->first() == false) {
-            DB::table('business_settings')->updateOrInsert(['key' => 'delivery_management'], [
-                'value' => json_encode([
-                    'status' => 0,
-                    'min_shipping_charge' => 0,
-                    'shipping_per_km' => 0,
-                ]),
-            ]);
-        }
+        // Delivery man functionality removed
         if (BusinessSetting::where(['key' => 'recaptcha'])->first() == false) {
             DB::table('business_settings')->updateOrInsert(['key' => 'recaptcha'], [
                 'value' => '{"status":"0","site_key":"","secret_key":""}'
@@ -573,14 +564,6 @@ class UpdateController extends Controller
             ]);
         }
 
-        //new database table
-        if (!Schema::hasTable('addon_settings')) {
-            $sql = File::get(base_path($request['path'] . 'database/addon_settings.sql'));
-            DB::unprepared($sql);
-            $this->set_payment_data();
-
-        }
-        $this->set_sms_data();
 
 
         if (!Schema::hasTable('payment_requests')) {
@@ -723,16 +706,7 @@ class UpdateController extends Controller
             ]);
         }
 
-        // version 11.3
-        $twoFactor = Setting::where(['key_name' => '2factor', 'settings_type' => 'sms_config'])->first();
-        if ($twoFactor && $twoFactor->live_values) {
-            $liveValues = is_array($twoFactor->live_values) ? $twoFactor->live_values : json_decode($twoFactor->live_values, true);
-            $liveValues['otp_template'] = $liveValues['otp_template'] ?? 'OTP1';
-            Setting::where(['key_name' => '2factor', 'settings_type' => 'sms_config'])->update([
-                'live_values' => json_encode($liveValues),
-                'test_values' => json_encode($liveValues),
-            ]);
-        }
+        // version 11.3 - System addon removed
 
         $this->updatePaymobConfigForSupportCountry();
         $this->version_11_4_Update();
@@ -740,243 +714,11 @@ class UpdateController extends Controller
         return redirect('/admin/auth/login');
     }
 
-    private function set_payment_data(){
-        try{
-            $gateway= [
-                'ssl_commerz_payment',
-                'razor_pay',
-                'paypal',
-                'stripe',
-                'senang_pay',
-                'paystack',
-                'bkash',
-                'paymob',
-                'flutterwave',
-                'mercadopago',
-            ];
 
-
-            $data= BusinessSetting::whereIn('key',$gateway)->pluck('value','key')->toArray();
-
-            foreach($data as $key => $value){
-                $gateway=$key;
-                if($key == 'ssl_commerz_payment' ){
-                    $gateway='ssl_commerz';
-                }
-                if($key == 'paymob' ){
-                    $gateway='paymob_accept';
-                }
-
-                $decoded_value= json_decode($value , true);
-                $data= ['gateway' => $gateway ,
-                    'mode' =>  isset($decoded_value['status']) == 1  ?  'live': 'test'
-                ];
-
-                $additional_data =[];
-
-                if ($gateway == 'ssl_commerz') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'store_id' => $decoded_value['store_id'],
-                        'store_password' => $decoded_value['store_password'],
-                    ];
-                } elseif ($gateway == 'paypal') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'client_id' => $decoded_value['paypal_client_id'],
-                        'client_secret' => $decoded_value['paypal_secret'],
-                    ];
-                } elseif ($gateway == 'stripe') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'api_key' => $decoded_value['api_key'],
-                        'published_key' => $decoded_value['published_key'],
-                    ];
-                } elseif ($gateway == 'razor_pay') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'api_key' => $decoded_value['razor_key'],
-                        'api_secret' => $decoded_value['razor_secret'],
-                    ];
-                } elseif ($gateway == 'senang_pay') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'callback_url' => null,
-                        'secret_key' => $decoded_value['secret_key'],
-                        'merchant_id' => $decoded_value['merchant_id'],
-                    ];
-                } elseif ($gateway == 'paystack') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'callback_url' => $decoded_value['paymentUrl'],
-                        'public_key' => $decoded_value['publicKey'],
-                        'secret_key' => $decoded_value['secretKey'],
-                        'merchant_email' => $decoded_value['merchantEmail'],
-                    ];
-                } elseif ($gateway == 'paymob_accept') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'callback_url' => null,
-                        'api_key' => $decoded_value['api_key'],
-                        'iframe_id' => $decoded_value['iframe_id'],
-                        'integration_id' => $decoded_value['integration_id'],
-                        'hmac' => $decoded_value['hmac'],
-                    ];
-                } elseif ($gateway == 'mercadopago') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'access_token' => $decoded_value['access_token'],
-                        'public_key' => $decoded_value['public_key'],
-                    ];
-                } elseif ($gateway == 'flutterwave') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'secret_key' => $decoded_value['secret_key'],
-                        'public_key' => $decoded_value['public_key'],
-                        'hash' => $decoded_value['hash'],
-                    ];
-                } elseif ($gateway == 'bkash') {
-                    $additional_data = [
-                        'status' => $decoded_value['status'],
-                        'app_key' => $decoded_value['api_key'],
-                        'app_secret' => $decoded_value['api_secret'],
-                        'username' => $decoded_value['username'],
-                        'password' => $decoded_value['password'],
-                    ];
-                }
-
-                $credentials= json_encode(array_merge($data, $additional_data));
-
-                $payment_additional_data=['gateway_title' => ucfirst(str_replace('_',' ',$gateway)),
-                    'gateway_image' => null];
-
-                DB::table('addon_settings')->updateOrInsert(['key_name' => $gateway, 'settings_type' => 'payment_config'], [
-                    'key_name' => $gateway,
-                    'live_values' => $credentials,
-                    'test_values' => $credentials,
-                    'settings_type' => 'payment_config',
-                    'mode' => isset($decoded_value['status']) == 1  ?  'live': 'test',
-                    'is_active' => isset($decoded_value['status']) == 1  ?  1: 0 ,
-                    'additional_data' => json_encode($payment_additional_data),
-                ]);
-            }
-        } catch (\Exception $exception) {
-            Toastr::error('Database import failed! try again');
-            return true;
-        }
-        return true;
-    }
-
-    private function set_sms_data(){
-        try{
-            $sms_gateway= ['twilio_sms', 'nexmo_sms', 'msg91_sms', '2factor_sms', 'signalwire_sms'];
-
-            $data= BusinessSetting::whereIn('key',$sms_gateway)->pluck('value','key')->toArray();
-            foreach($data as $key => $value){
-                $decoded_value= json_decode($value , true);
-
-                if ($key == 'twilio_sms') {
-                    $sms_gateway='twilio';
-                    $additional_data = [
-                        'status' => data_get($decoded_value,'status',null),
-                        'sid' => data_get($decoded_value,'sid',null),
-                        'messaging_service_sid' =>  data_get($decoded_value,'messaging_service_id',null),
-                        'token' => data_get($decoded_value,'token',null),
-                        'from' =>data_get($decoded_value,'from',null),
-                        'otp_template' => data_get($decoded_value,'otp_template',null),
-                    ];
-                } elseif ($key == 'nexmo_sms') {
-                    $sms_gateway='nexmo';
-                    $additional_data = [
-                        'status' => data_get($decoded_value,'status',null),
-                        'api_key' => data_get($decoded_value,'api_key',null),
-                        'api_secret' =>  data_get($decoded_value,'api_secret',null),
-                        'token' => data_get($decoded_value,'token',null),
-                        'from' =>  data_get($decoded_value,'from',null),
-                        'otp_template' =>  data_get($decoded_value,'otp_template',null),
-                    ];
-                } elseif ($key == '2factor_sms') {
-                    $sms_gateway='2factor';
-                    $additional_data = [
-                        'status' => data_get($decoded_value,'status',null),
-                        'api_key' => data_get($decoded_value,'api_key',null),
-                    ];
-                } elseif ($key == 'msg91_sms') {
-                    $sms_gateway='msg91';
-                    $additional_data = [
-                        'status' => data_get($decoded_value,'status',null),
-                        'template_id' =>  data_get($decoded_value,'template_id',null),
-                        'auth_key' =>  data_get($decoded_value,'authkey',null),
-                    ];
-                }elseif ($key == 'signalwire_sms') {
-                    $sms_gateway='signal_wire';
-                    $additional_data = [
-                        'status' => data_get($decoded_value,'status',null),
-                        'project_id' =>  data_get($decoded_value,'project_id',null),
-                        'token' => data_get($decoded_value,'token',null),
-                        'space_url' => data_get($decoded_value,'space_url',null),
-                        'from' =>  data_get($decoded_value,'from',null),
-                        'otp_template' =>  data_get($decoded_value,'otp_template',null),
-                    ];
-                }
-
-
-                $data= [
-                    'gateway' => $sms_gateway ,
-                    'mode' =>  isset($decoded_value['status']) == 1  ?  'live': 'test'
-                ];
-                $credentials= json_encode(array_merge($data, $additional_data));
-
-                DB::table('addon_settings')->updateOrInsert(['key_name' => $sms_gateway, 'settings_type' => 'sms_config'], [
-                    'key_name' => $sms_gateway,
-                    'live_values' => $credentials,
-                    'test_values' => $credentials,
-                    'settings_type' => 'sms_config',
-                    'mode' => isset($decoded_value['status']) == 1  ?  'live': 'test',
-                    'is_active' => isset($decoded_value['status']) == 1  ?  1: 0 ,
-                ]);
-            }
-        } catch (\Exception $exception) {
-            Toastr::error('Database import failed! try again');
-            return true;
-        }
-        return true;
-    }
 
     private function updatePaymobConfigForSupportCountry(): void
     {
-        $paymobAccept = Setting::where(['key_name' => 'paymob_accept'])->first()?->live_values ?? [];
-        $paymobAcceptValues = is_array($paymobAccept) ? $paymobAccept : json_decode($paymobAccept, true);
-
-        if (!isset($paymobAcceptValues['supported_country']) || !isset($paymobAcceptValues['secret_key'])) {
-            Setting::updateOrCreate(['key_name' => 'paymob_accept', 'settings_type' => 'payment_config'], [
-                'key_name' => 'paymob_accept',
-                'live_values' => [
-                    'gateway' => $paymobAcceptValues['gateway'] ?? '',
-                    'mode' => "live",
-                    'status' => $paymobAcceptValues['status'] ?? 0,
-                    'supported_country' => "",
-                    'public_key' => $paymobAcceptValues['public_key'] ?? '',
-                    'secret_key' => $paymobAcceptValues['secret_key'] ?? '',
-                    'integration_id' => $paymobAcceptValues['integration_id'] ?? '',
-                    'hmac' => $paymobAcceptValues['hmac'] ?? '',
-                ],
-                'test_values' => [
-                    'gateway' => $paymobAcceptValues['gateway'] ?? '',
-                    'mode' => "test",
-                    'status' => $paymobAcceptValues['status'] ?? 0,
-                    'supported_country' => "",
-                    'public_key' => $paymobAcceptValues['public_key'] ?? '',
-                    'secret_key' => $paymobAcceptValues['secret_key'] ?? '',
-                    'integration_id' => $paymobAcceptValues['integration_id'] ?? '',
-                    'hmac' => $paymobAcceptValues['hmac'] ?? '',
-                ],
-                'settings_type' => 'payment_config',
-                'mode' => 'test',
-                'is_active' => 0 ,
-                'additional_data' => null,
-            ]);
-        }
+        // System addon removed - method no longer needed
     }
 
     private function version_11_4_Update()

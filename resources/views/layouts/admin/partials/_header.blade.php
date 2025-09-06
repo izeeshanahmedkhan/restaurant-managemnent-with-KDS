@@ -7,10 +7,10 @@
                 <a class="navbar-brand" href="{{route('admin.dashboard')}}" aria-label="">
                     <img class="navbar-brand-logo" style="object-fit: contain;"
                          onerror="this.src='{{asset('assets/admin/img/160x160/img1.jpg')}}'"
-                         src="{{asset('storage/app/restaurant/'.$restaurant_logo)}}" alt="Logo">
+                         src="{{asset('storage/restaurant/'.$restaurant_logo)}}" alt="Logo">
                     <img class="navbar-brand-logo-mini" style="object-fit: contain;"
                          onerror="this.src='{{asset('assets/admin/img/160x160/img1.jpg')}}'"
-                         src="{{asset('storage/app/restaurant/'.$restaurant_logo)}}"
+                         src="{{asset('storage/restaurant/'.$restaurant_logo)}}"
                          alt="Logo">
                 </a>
                 <!-- End Logo -->

@@ -6,10 +6,10 @@
                 <a class="navbar-brand" href="{{route('branch.dashboard')}}" aria-label="">
                     <img class="navbar-brand-logo" style="object-fit: contain;"
                          onerror="this.src='{{asset('assets/admin/img/160x160/img1.jpg')}}'"
-                         src="{{asset('storage/app/restaurant/'.$restaurantLogo)}}" alt="{{ translate('logo') }}">
+                         src="{{asset('storage/restaurant/'.$restaurantLogo)}}" alt="{{ translate('logo') }}">
                     <img class="navbar-brand-logo-mini" style="object-fit: contain;"
                          onerror="this.src='{{asset('assets/admin/img/160x160/img1.jpg')}}'"
-                         src="{{asset('storage/app/restaurant/'.$restaurantLogo)}}" alt="{{ translate('logo') }}">
+                         src="{{asset('storage/restaurant/'.$restaurantLogo)}}" alt="{{ translate('logo') }}">
                 </a>
             </div>
 
@@ -25,37 +25,7 @@
 
             <div class="navbar-nav-wrap-content-right">
                 <ul class="navbar-nav align-items-center flex-row">
-                    <li class="nav-item d-none d-sm-inline-block">
-                        <div class="hs-unfold">
-                            <div class="bg-white p-1 rounded">
-                                @php( $local = session()->has('local')?session('local'):'en')
-                                @php($lang = \App\CentralLogics\Helpers::get_business_settings('language')??null)
-                                <div class="topbar-text dropdown disable-autohide text-capitalize">
-                                    @if(isset($lang) && array_key_exists('code', $lang[0]))
-                                        <a class="topbar-link dropdown-toggle d-flex gap-2 align-items-center font-weight-bold dropdown-toggle-empty lang-country-flag" href="#" data-toggle="dropdown">
-                                            @foreach($lang as $data)
-                                                @if($data['code']==$local)
-                                                    <img src="{{asset('assets/admin/img/google_translate_logo.png')}}" alt=""><span>{{$data['name']}}</span>
-                                                @endif
-                                            @endforeach
-                                        </a>
-                                        <ul class="dropdown-menu">
-                                            @foreach($lang as $key =>$data)
-                                                @if($data['status']==1)
-                                                    <li>
-                                                        <a class="dropdown-item pr-8 d-flex gap-2 align-items-center"
-                                                        href="{{route('admin.lang',[$data['code']])}}">
-                                                            <span class="text-capitalize">{{\App\CentralLogics\Helpers::get_language_name($data['code'])}}</span>
-                                                        </a>
-                                                    </li>
-                                                @endif
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </li>
+                    <!-- Language functionality removed -->
 
                     <li class="nav-item d-none d-sm-inline-block">
                         <div class="hs-unfold">

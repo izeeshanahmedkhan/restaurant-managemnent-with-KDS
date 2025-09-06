@@ -722,24 +722,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-4 col-sm-6 mb-4">
-                            @php($dm_status=\App\CentralLogics\Helpers::get_business_settings('dm_self_registration'))
-                            <div class="form-control d-flex justify-content-between align-items-center gap-3">
-                                <div>
-                                    <label class="text-dark mb-0">{{translate('Deliveryman Self Registration')}}
-                                        <i class="tio-info-outined"
-                                           data-toggle="tooltip"
-                                           data-placement="top"
-                                           title="{{ translate('When this field is active  delivery men can register themself using the delivery man app.') }}">
-                                        </i>
-                                    </label>
-                                </div>
-                                <label class="switcher">
-                                    <input class="switcher_input" type="checkbox" name="dm_self_registration" {{$dm_status == null || $dm_status == 0? '' : 'checked'}} id="dm_self_registration">
-                                    <span class="switcher_control"></span>
-                                </label>
-                            </div>
-                        </div>
+                        <!-- Delivery man functionality removed -->
 
                         <div class="col-lg-4 col-sm-6 mb-4">
                             @php($guest_checkout=\App\CentralLogics\Helpers::get_business_settings('guest_checkout'))
@@ -777,56 +760,9 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="col-lg-4 col-sm-6 mb-4">
-                            @php($partial_payment=\App\CentralLogics\Helpers::get_business_settings('partial_payment'))
-                            <div class="form-control d-flex justify-content-between align-items-center gap-3">
-                                <div>
-                                    <label class="text-dark mb-0">{{translate('Partial Payment')}}
-                                        <i class="tio-info-outined"
-                                           data-toggle="tooltip"
-                                           data-placement="top"
-                                           title="{{ translate('When this option is enabled, users may pay up to a certain amount using their wallet balance.') }}">
-                                        </i>
-                                    </label>
-                                </div>
-                                <label class="switcher">
-                                    <input class="switcher_input" type="checkbox" name="partial_payment" {{$partial_payment == null || $partial_payment == 0? '' : 'checked'}} id="partial_payment">
-                                    <span class="switcher_control"></span>
-                                </label>
-                            </div>
-                        </div>
+                        <!-- Wallet functionality removed -->
 
-                        <div class="col-lg-4 col-sm-6">
-                            @php($combine_with=\App\CentralLogics\Helpers::get_business_settings('partial_payment_combine_with'))
-                            @php($cod=\App\CentralLogics\Helpers::get_business_settings('cash_on_delivery'))
-                            @php($digital=\App\CentralLogics\Helpers::get_business_settings('digital_payment'))
-                            @php($offline=\App\CentralLogics\Helpers::get_business_settings('offline_payment'))
-                            <div class="form-group">
-                                <label class="input-label">{{translate('Combine Payment With')}}
-                                    <i class="tio-info-outined"
-                                       data-toggle="tooltip"
-                                       data-placement="top"
-                                       title="{{ translate('The wallet balance will be combined with the chosen payment method to complete the transaction.') }}">
-                                    </i>
-                                    <!-- <span class="font-size-sm text-muted">({{ translate('if the particular payment method status is off then that selection option will be disable. Change the payment status from') }} <a class="text-decoration-underline" href="{{ route('admin.business-settings.web-app.payment-method') }}" target="_blank">{{ translate('Payment Method Setup') }}</a>)</span> -->
-                                </label>
-
-                                <select name="partial_payment_combine_with" class="form-control">
-                                    <option value="COD" {{(isset($combine_with) && $combine_with=='COD')?'selected':''}} {{ $cod['status'] == 0 ? 'disabled' : '' }}>
-                                        {{ translate('COD') }}
-                                    </option>
-                                    <option value="digital_payment" {{(isset($combine_with) && $combine_with=='digital_payment')?'selected':''}} {{ $digital['status'] == 0 ? 'disabled' : '' }}>
-                                        {{ translate('Digital Payment') }}
-                                    </option>
-                                    <option value="offline_payment" {{(isset($combine_with) && $combine_with=='offline_payment')?'selected':''}} {{ $offline['status'] == 0 ? 'disabled' : '' }}>
-                                        {{ translate('Offline Payment') }}
-                                    </option>
-                                    <option value="all" {{(isset($combine_with) && $combine_with=='all')?'selected':''}} {{ $cod['status'] == 0 || $digital['status'] == 0 || $offline['status'] == 0 ? 'disabled' : '' }}>
-                                        {{ translate('All') }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
+                        <!-- Wallet payment combination functionality removed -->
 
                         <div class="col-lg-4 col-sm-6 mb-4">
                             @php($halalTagStatus=\App\CentralLogics\Helpers::get_business_settings('halal_tag_status'))
@@ -852,68 +788,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-4 col-sm-6 mb-4">
-                            @php($admin_order_notification=\App\CentralLogics\Helpers::get_business_settings('admin_order_notification'))
-                            <div class="form-control d-flex justify-content-between align-items-center gap-3">
-                                <div>
-                                    <label class="text-dark mb-0">{{translate('Order Notification')}}
-                                        <i class="tio-info-outined"
-                                           data-toggle="tooltip"
-                                           data-placement="top"
-                                           title="{{ translate('Admin/Branch will get a pop-up notification with sounds for every order placed by customers.') }}">
-                                        </i>
-                                    </label>
-                                </div>
-                                <label class="switcher">
-                                    <input class="switcher_input" type="checkbox" name="admin_order_notification" {{$admin_order_notification == null || $admin_order_notification == 0? '' : 'checked'}} id="admin_order_notification">
-                                    <span class="switcher_control"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-lg-4 col-sm-6">
-                            <div class="form-group">
-                                <div class="d-flex justify-content-between">
-                                    <label class="input-label">{{translate('Order Notification Type')}}
-                                        <i class="tio-info-outined"
-                                           data-toggle="tooltip"
-                                           data-placement="top"
-                                           title="{{ translate('For Firebase a single real-time notification will be sent upon order placement with no repetition. For the Manual option notifications will appear at 10-second intervals until the order is viewed.') }}">
-                                        </i>
-                                    </label>
-                                    <a class="pr-1 text-decoration-underline" href="{{ route('admin.business-settings.web-app.third-party.fcm-config') }}" target="_blank">{{ translate('Configure from here') }}</a>
-                                </div>
-                                <div class="">
-                                    @php($admin_order_notification_type=\App\CentralLogics\Helpers::get_business_settings('admin_order_notification_type'))
-                                    <div class="form-control d-flex flex-column-2">
-                                        <div class="custom-radio d-flex gap-2 align-items-center">
-                                            <input type="radio" class=""
-                                                   value="manual"
-                                                   name="admin_order_notification_type"
-                                                   id="admin_order_notification_type1" {{(isset($admin_order_notification_type) && $admin_order_notification_type=='manual')?'checked':''}}>
-                                            <label class="media align-items-center mb-0"
-                                                   for="admin_order_notification_type1">
-                                                    <span class="media-body">
-                                                       {{translate('Manual')}}
-                                                    </span>
-                                            </label>
-                                        </div>
-
-                                        <div class="custom-radio d-flex gap-2 align-items-center">
-                                            <input type="radio" class=""
-                                                   value="firebase"
-                                                   name="admin_order_notification_type"
-                                                   id="admin_order_notification_type2" {{(isset($admin_order_notification_type) && $admin_order_notification_type=='firebase')?'checked':''}}>
-                                            <label class="media align-items-center mb-0"
-                                                   for="admin_order_notification_type2">
-                                                    <span class="media-body">
-                                                        {{ translate('Firebase') }}
-                                                    </span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Notification functionality removed -->
 
                         @php($footer_text=\App\Model\BusinessSetting::where('key','footer_description_text')->first()->value)
                         <div class="col-lg-8 col-sm-12">
@@ -1203,12 +1078,7 @@
                                     <span>{{ translate('Branch Coverage Area') }}</span>
                                 </a>
                             </div>
-                            <div class="col-6">
-                                <a class="d-flex align-items-center border rounded px-3 py-2 gap-2" href="{{ route('admin.delivery-man.list') }}" target="_blank">
-                                    <img src="{{ asset('assets/admin/svg/components/delivery-car.svg') }}" width="21" alt="">
-                                    <span>{{ translate('Deliveryman Location') }}</span>
-                                </a>
-                            </div>
+                            <!-- Delivery man functionality removed -->
                             <div class="col-6">
                                 <a class="d-flex align-items-center border rounded px-3 py-2 gap-2" href="{{ route('admin.business-settings.restaurant.delivery-fee-setup') }}" target="_blank">
                                     <img src="{{ asset('assets/admin/svg/components/delivery-charge.svg') }}" width="21" alt="">

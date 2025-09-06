@@ -106,24 +106,7 @@
                                     </div>
                                 </div>
 
-                                <div class="d-none" id="dine_in_section">
-                                    <div class="form-group d-flex flex-wrap flex-sm-nowrap gap-2">
-                                        <select id='table' name="table_id"  class="table-data-selector form-control form-ellipsis select-table">
-                                            <option selected disabled>{{translate('Select Table')}}</option>
-                                            @foreach($tables as $table)
-                                                <option value="{{$table['id']}}" {{ $table['id'] == session('table_id') ? 'selected' : ''}}>{{translate('Table')}} - {{$table['number']}}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group d-flex flex-wrap flex-sm-nowrap gap-2">
-                                        <input type="number" value="{{ session('people_number') }}" name="number_of_people"
-                                               oninput="this.value = this.value.replace(/[^\d]/g, '')"
-                                               onkeyup="store_key('people_number',this.value)" id="number_of_people"
-                                               class="form-control" id="password" min="1" max="99"
-                                               placeholder="{{translate('Number Of People')}}">
-                                    </div>
-                                </div>
+                                {{-- Table management functionality removed --}}
 
                                 <div class="form-group d-none" id="home_delivery_section">
                                     <div class="d-flex justify-content-between">
@@ -428,10 +411,7 @@
         select_order_type(selectedOrderType);
     });
 
-    $('.select-table').change(function() {
-        var selectedTableId = $(this).val();
-        store_key('table_id', selectedTableId);
-    });
+    // Table management functionality removed
 
     $('.delivery-address-update-button').click(function() {
         deliveryAdressStore();
@@ -892,15 +872,10 @@
             },
         });
 
-        if (order_type == 'dine_in') {
-            $('#dine_in_section').removeClass('d-none');
-            $('#home_delivery_section').addClass('d-none')
-        } else if(order_type == 'home_delivery') {
+        if(order_type == 'home_delivery') {
             $('#home_delivery_section').removeClass('d-none');
-            $('#dine_in_section').addClass('d-none');
         }else{
-            $('#home_delivery_section').addClass('d-none')
-            $('#dine_in_section').addClass('d-none');
+            $('#home_delivery_section').addClass('d-none');
         }
     }
 

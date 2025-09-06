@@ -10,10 +10,9 @@ use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\Product;
 use App\Model\ProductByBranch;
-use App\Model\Review;
+// Review functionality removed
 use App\Model\Tag;
-use App\Model\Translation;
-use App\Models\Cuisine;
+// Translation model removed
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,8 +25,8 @@ class ProductController extends Controller
 {
     public function __construct(
         private Product     $product,
-        private Translation $translation,
-        private Review      $review,
+        // Translation model removed
+        // Review functionality removed
         private Order      $order
     ){}
 
@@ -75,7 +74,6 @@ class ProductController extends Controller
             name: $request['name'],
             rating: $request['rating'],
             category_id: $request['category_id'],
-            cuisine_id: $request['cuisine_id'],
             product_type: $productType,
             sort_by: $request['sort_by'],
             limit: $request['limit'],
@@ -104,14 +102,8 @@ class ProductController extends Controller
 
             $ratingProductIds = [];
             if (isset($rating)){
-                $ratingProductIds = Product::active()->with('reviews')
-                    ->whereHas('reviews', function ($q) use ($request) {
-                        $q->select('product_id')
-                            ->groupBy('product_id')
-                            ->havingRaw("AVG(rating) >= ?", [$request['rating']]);
-                        })
-                    ->pluck('id')
-                    ->toArray();
+                // Review functionality removed
+                $ratingProductIds = [];
             }
 
             $productIdsForCategory = [];
@@ -129,7 +121,7 @@ class ProductController extends Controller
 
             $paginator = $this->product->active()
                 ->withCount('reviews')
-                ->with(['rating', 'cuisines', 'branch_product', 'reviews'])
+                ->with(['rating', 'branch_product', 'reviews'])
                 ->whereIn('id', $ids)
                 ->withCount(['wishlist'])
                 ->whereHas('branch_product.branch', function ($query) {
@@ -153,12 +145,6 @@ class ProductController extends Controller
                 })
                 ->when(isset($request['rating']), function ($query) use ($ratingProductIds) {
                     $query->whereIn('id', $ratingProductIds);
-                })
-                ->when(isset($request['cuisine_id']), function ($query) use ($request) {
-                    $cuisineIds = is_array($request['cuisine_id']) ? $request['cuisine_id'] : explode(',', $request['cuisine_id']);
-                    $query->whereHas('cuisines', function ($q) use ($cuisineIds) {
-                        $q->whereIn('cuisine_id', $cuisineIds);
-                    });
                 })
                 ->when(isset($request['sort_by']) && $request['sort_by'] == 'new_arrival', function ($query) {
                     return $query->whereBetween('created_at', [Carbon::now()->subMonth(3), Carbon::now()]);
@@ -276,115 +262,19 @@ class ProductController extends Controller
 
     }
 
-    /**
-     * @param $id
-     * @return JsonResponse
-     */
-    public function productReviews(Request $request,$id): JsonResponse
-    {
-        $reviews = $this->review
-            ->with(['customer'])
-            ->where(['product_id' => $id])
-            ->latest()
-            ->paginate($request->input('limit', 10), ['*'], 'page', $request->input('offset', 1));
-
-        foreach ($reviews as $review) {
-            $review->attachment = json_decode($review->attachment, true); // Convert JSON string to an array
-        }
-
-        // Total number of reviews
-        $totalReview = DB::table('reviews')
-            ->where('product_id', $id)
-            ->count();
-
-        // Average rating
-        $averageRating = DB::table('reviews')
-            ->where('product_id', $id)
-            ->avg('rating');
-        $averageRating = round($averageRating, 2);
-
-        // Count of each rating type
-        $ratingGroupCount = DB::table('reviews')
-            ->where('product_id', $id)
-            ->select('rating', DB::raw('count(rating) as total'))
-            ->groupBy('rating')
-            ->get();
-
-        $ratingInfo =  [
-            'total_review' => $totalReview,
-            'average_rating' => $averageRating,
-            'rating_group_count' => $ratingGroupCount,
-        ];
-
-        $data =  [
-            'total_size' => $reviews->total(),
-            'limit' => $request->input('limit', 10),
-            'offset' => $request->input('offset', 1),
-            'reviews' => $reviews->items(),
-        ];
-
-        return response()->json(['rating_info' => $ratingInfo, 'reviews' => $data], 200);
-    }
+    // Product reviews functionality removed
 
     /**
      * @param $id
      * @return JsonResponse
      */
-    public function productRating($id): JsonResponse
-    {
-        try {
-            $product = $this->product->find($id);
-            $overallRating = ProductLogic::get_overall_rating($product->reviews);
-            return response()->json(floatval($overallRating[0]), 200);
-
-        } catch (\Exception $e) {
-            return response()->json(['errors' => $e], 403);
-        }
-    }
+    // Product rating functionality removed
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function submitProductReview(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required',
-            'order_id' => 'required',
-            'comment' => 'required',
-            'rating' => 'required|numeric|max:5',
-        ]);
-
-        $product = $this->product->find($request->product_id);
-        if (isset($product) == false) {
-            $validator->errors()->add('product_id', translate('no_data_found'));
-        }
-
-        $multipleReview = $this->review->where(['product_id' => $request->product_id, 'user_id' => auth('api')->user()->id])->first();
-        $review = $multipleReview ?? $this->review;
-
-        if ($validator->errors()->count() > 0) {
-            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
-        }
-
-        $imageArray = [];
-        if (!empty($request->file('attachment'))) {
-            foreach ($request->file('attachment') as $image) {
-                $imageName = Helpers::upload('review/', 'png', $image);
-                $imageArray[] = $imageName;
-            }
-        }
-
-        $review->user_id = auth('api')->user()->id;
-        $review->product_id = $request->product_id;
-        $review->order_id = $request->order_id;
-        $review->comment = $request->comment;
-        $review->rating = $request->rating;
-        $review->attachment = json_encode($imageArray);
-        $review->save();
-
-        return response()->json(['message' => translate('review_submit_success')], 200);
-    }
+    // Product review submission functionality removed
 
     /**
      * @param Request $request
@@ -489,19 +379,8 @@ class ProductController extends Controller
             $categoryProducts = collect();
         }
 
-        $cuisineProducts = $this->product->with(['branch_product'])
-            ->whereHas('branch_product.branch', function ($query) {
-                $query->where('status', 1);
-            })
-            ->branchProductAvailability()
-            ->whereHas('cuisines', function ($query) use ($name) {
-                $query->where('name', 'LIKE', "%$name%");
-            })
-            ->pluck('name');
-
         $results = $productResult
             ->merge($categoryProducts)
-            ->merge($cuisineProducts)
             ->unique();
 
         return response()->json($results->values());
@@ -719,8 +598,7 @@ class ProductController extends Controller
             ->pluck('product_id')
             ->unique();
 
-        $products = Product::with('cuisines')
-            ->whereIn('id', $orderDetailsProductIds)
+        $products = Product::whereIn('id', $orderDetailsProductIds)
             ->orderBy('popularity_count', 'DESC')
             ->get();
 
@@ -734,14 +612,6 @@ class ProductController extends Controller
 
         $categoryList = Category::whereIn('id', $categoryIds)->select('id', 'name', 'image', 'banner_image')->get();
 
-        $cuisineList = $products->pluck('cuisines')->flatten()
-            ->filter(function ($cuisine) {
-                return isset($cuisine['is_active']) && $cuisine['is_active'] == 1;
-            })
-            ->pluck('name')
-            ->unique()
-            ->values();
-
         // Ensure there are 8 categories by filling with random ones if needed
         if ($categoryList->count() < 8) {
             $additionalCategories = Category::whereNotIn('id', $categoryIds)
@@ -752,23 +622,11 @@ class ProductController extends Controller
             $categoryList = $categoryList->merge($additionalCategories);
         }
 
-        // Ensure there are 8 cuisines by filling with random ones if needed
-        if ($cuisineList->count() < 8) {
-            $additionalCuisines = Cuisine::whereNotIn('name', $cuisineList)
-                ->active()
-                ->inRandomOrder()
-                ->limit(8 - $cuisineList->count())
-                ->pluck('name');
-            $cuisineList = $cuisineList->merge($additionalCuisines);
-        }
-
-        // Limit both lists to exactly 8 items
+        // Limit to exactly 8 items
         $categoryList = $categoryList->take(8);
-        $cuisineList = $cuisineList->take(8);
 
         return [
             'categories' => $categoryList,
-            'cuisines' => $cuisineList,
         ];
 
     }

@@ -58,11 +58,11 @@ class ConfigController extends Controller
         $currencySymbol = $this->currency->where(['currency_code' => Helpers::currency_code()])->first()->currency_symbol;
         $cod = Helpers::get_business_settings('cash_on_delivery');
 
-        $deliveryConfig = Helpers::get_business_settings('delivery_management');
+        // Delivery man functionality removed
         $deliveryManagement = array(
-            "status" => (int)$deliveryConfig['status'],
-            "min_shipping_charge" => (float)$deliveryConfig['min_shipping_charge'],
-            "shipping_per_km" => (float)$deliveryConfig['shipping_per_km'],
+            "status" => 0,
+            "min_shipping_charge" => 0,
+            "shipping_per_km" => 0,
         );
 
         $playStoreConfig = Helpers::get_business_settings('play_store_config');
@@ -80,7 +80,7 @@ class ConfigController extends Controller
             "text" => $cookiesConfig['text'],
         );
 
-        $offlinePayment = Helpers::get_business_settings('offline_payment');
+        // Offline payment functionality removed
         $apple = Helpers::get_business_settings('apple_login');
         $appleLogin = array(
             'login_medium' => $apple['login_medium'],
@@ -132,20 +132,18 @@ class ConfigController extends Controller
             'base_urls' => [
                 'product_image_url' => asset('storage/product'),
                 'customer_image_url' => asset('storage/profile'),
-                'banner_image_url' => asset('storage/banner'),
+                // Banner functionality removed
                 'category_image_url' => asset('storage/category'),
-                'category_banner_image_url' => asset('storage/category/banner'),
-                'review_image_url' => asset('storage/review'),
+                // Banner functionality removed
+                // Review functionality removed
                 'notification_image_url' => asset('storage/notification'),
                 'restaurant_image_url' => asset('storage/restaurant'),
-                'delivery_man_image_url' => asset('storage/delivery-man'),
-                'chat_image_url' => asset('storage/conversation'),
+                // Delivery man functionality removed
                 'promotional_url' => asset('storage/promotion'),
                 'kitchen_image_url' => asset('storage/kitchen'),
                 'branch_image_url' => asset('storage/branch'),
                 'gateway_image_url' => asset('storage/payment_modules/gateway_image'),
                 'payment_image_url' => asset('public/assets/admin/img/payment'),
-                'cuisine_image_url' => asset('storage/cuisine'),
             ],
             'currency_symbol' => $currencySymbol,
             'delivery_charge' => (float) Helpers::get_business_settings('delivery_charge'),
@@ -177,17 +175,7 @@ class ConfigController extends Controller
                 'google' => (integer) $google,
                 'facebook' => (integer) $facebook,
             ],
-            'wallet_status' => (integer) Helpers::get_business_settings('wallet_status'),
-            'loyalty_point_status' => (integer) Helpers::get_business_settings('loyalty_point_status'),
-            'ref_earning_status' => (integer) Helpers::get_business_settings('ref_earning_status'),
-            'loyalty_point_item_purchase_point' => (float) Helpers::get_business_settings('loyalty_point_item_purchase_point'),
-            'loyalty_point_exchange_rate' => (float) (Helpers::get_business_settings('loyalty_point_exchange_rate') ?? 0),
-            'loyalty_point_minimum_point' => (float) (Helpers::get_business_settings('loyalty_point_minimum_point') ?? 0),
-            'customer_referred_discount_status' => (integer) (Helpers::get_business_settings('customer_referred_discount_status') ?? 0),
-            'customer_referred_discount_type' => Helpers::get_business_settings('customer_referred_discount_type') ?? 'amount',
-            'customer_referred_discount_amount' => (float) (Helpers::get_business_settings('customer_referred_discount_amount') ?? 0),
-            'customer_referred_validity_type' => Helpers::get_business_settings('customer_referred_validity_type') ?? 'day',
-            'customer_referred_validity_value' => (integer) (Helpers::get_business_settings('customer_referred_validity_value') ?? 0),
+            // Wallet, loyalty, and referral functionality removed
             'whatsapp' => Helpers::get_business_settings('whatsapp'),
             'cookies_management' => $cookies_management,
             'toggle_dm_registration' => (integer) (Helpers::get_business_settings('dm_self_registration') ?? 0),
@@ -198,11 +186,11 @@ class ConfigController extends Controller
             'active_payment_method_list' => (integer) $digitalPaymentStatusValue['status'] == 1 ? $activeAddonPaymentLists : [],
             'cash_on_delivery' => $cod['status'] == 1 ? 'true' : 'false',
             'digital_payment' => $digitalPayment['status'] == 1 ? 'true' : 'false',
-            'offline_payment' => $offlinePayment['status'] == 1 ? 'true' : 'false',
+            // Offline payment functionality removed
             'guest_checkout' => (integer) (Helpers::get_business_settings('guest_checkout') ?? 0),
             'partial_payment' => (integer) (Helpers::get_business_settings('partial_payment') ?? 0),
             'partial_payment_combine_with' => (string) Helpers::get_business_settings('partial_payment_combine_with'),
-            'add_fund_to_wallet' => (integer) (Helpers::get_business_settings('add_fund_to_wallet') ?? 0),
+            // Wallet functionality removed
             'apple_login' => $appleLogin,
             'cutlery_status' => (integer) (Helpers::get_business_settings('cutlery_status') ?? 0),
             'firebase_otp_verification_status' => (integer)($firebaseOTPVerification ? $firebaseOTPVerification['status'] : 0),
@@ -222,27 +210,7 @@ class ConfigController extends Controller
      */
     private function getPaymentMethods(): array
     {
-        if (!Schema::hasTable('addon_settings')) {
-            return [];
-        }
-
-        $methods = DB::table('addon_settings')->where('settings_type', 'payment_config')->get();
-        $env = env('APP_ENV') == 'live' ? 'live' : 'test';
-        $credentials = $env . '_values';
-
-        $data = [];
-        foreach ($methods as $method) {
-            $credentialsData = json_decode($method->$credentials);
-            $additionalData = json_decode($method->additional_data);
-            if ($credentialsData->status == 1) {
-                $data[] = [
-                    'gateway' => $method->key_name,
-                    'gateway_title' => $additionalData?->gateway_title,
-                    'gateway_image' => $additionalData?->gateway_image
-                ];
-            }
-        }
-        return $data;
+        return [];
     }
 
     /**
@@ -250,31 +218,7 @@ class ConfigController extends Controller
      */
     private function getDefaultPaymentMethods(): array
     {
-        if (!Schema::hasTable('addon_settings')) {
-            return [];
-        }
-
-        $methods = DB::table('addon_settings')
-            ->whereIn('settings_type', ['payment_config'])
-            ->whereIn('key_name', ['ssl_commerz','paypal','stripe','razor_pay','senang_pay','paystack','paymob_accept','flutterwave','bkash','mercadopago'])
-            ->get();
-
-        $env = env('APP_ENV') == 'live' ? 'live' : 'test';
-        $credentials = $env . '_values';
-
-        $data = [];
-        foreach ($methods as $method) {
-            $credentialsData = json_decode($method->$credentials);
-            $additionalData = json_decode($method->additional_data);
-            if ($credentialsData->status == 1) {
-                $data[] = [
-                    'gateway' => $method->key_name,
-                    'gateway_title' => $additionalData?->gateway_title,
-                    'gateway_image' => $additionalData?->gateway_image
-                ];
-            }
-        }
-        return $data;
+        return [];
     }
 
     /**

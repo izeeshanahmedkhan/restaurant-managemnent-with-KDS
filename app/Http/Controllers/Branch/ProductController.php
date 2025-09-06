@@ -56,7 +56,7 @@ class ProductController extends Controller
      */
     public function setPriceIndex($id): Factory|View|Application
     {
-        $product = $this->product->with(['translations', 'product_by_branch', 'sub_branch_product'])->find($id);
+        $product = $this->product->with(['// translations removed', 'product_by_branch', 'sub_branch_product'])->find($id);
         $mainBranchProduct = $this->productByBranch->where(['product_id' => $id, 'branch_id' => 1])->first();
         return view('branch-views.product.set-price', compact('product', 'mainBranchProduct'));
     }

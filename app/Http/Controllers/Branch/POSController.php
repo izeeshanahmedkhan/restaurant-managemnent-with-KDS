@@ -8,12 +8,11 @@ use App\Model\AddOn;
 use App\Model\Branch;
 use App\Model\Category;
 use App\Model\CustomerAddress;
-use App\Model\Notification;
+// Notification functionality removed
 use App\Model\Product;
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\ProductByBranch;
-use App\Model\Table;
 use App\Models\OrderChangeAmount;
 use App\User;
 use Brian2694\Toastr\Facades\Toastr;
@@ -38,7 +37,6 @@ class POSController extends Controller
         private Category        $category,
         private Order           $order,
         private User            $user,
-        private Table           $table,
         private Product         $product,
         private Branch          $branch,
         private ProductByBranch $product_by_Branch,
@@ -57,7 +55,6 @@ class POSController extends Controller
         $keyword = $request->keyword;
         $key = explode(' ', $keyword);
         $selectedCustomer = $this->user->where('id', session('customer_id'))->first();
-        $selectedTable = $this->table->where('id', session('table_id'))->first();
 
         $products = $this->product
             ->with('product_by_branch')
@@ -82,9 +79,7 @@ class POSController extends Controller
             ->paginate(Helpers::getPagination());
 
         $branch = $this->branch->find(auth('branch')->id());
-        $tables = $this->table->where(['branch_id' => auth('branch')->id()])->get();
-
-        return view('branch-views.pos.index', compact('categories', 'products', 'category', 'keyword', 'branch', 'tables', 'selectedTable', 'selectedCustomer'));
+        return view('branch-views.pos.index', compact('categories', 'products', 'category', 'keyword', 'branch', 'selectedCustomer'));
     }
 
     /**
@@ -372,22 +367,6 @@ class POSController extends Controller
 
         $orderType = session()->has('order_type') ? session()->get('order_type') : 'take_away';
 
-        if ($orderType == 'dine_in'){
-            if (!session()->has('table_id')){
-                Toastr::error(translate('please select a table number'));
-                return back();
-            }
-            if (!session()->has('people_number')){
-                Toastr::error(translate('please enter people number'));
-                return back();
-            }
-
-            $table = Table::find(session('table_id'));
-            if (isset($table) && session('people_number') > $table->capacity  || session('people_number') < 1 ) {
-                Toastr::error(translate('enter valid people number between 1 to '. $table->capacity));
-                return back();
-            }
-        }
 
         $deliveryCharge = 0;
         $distance = 0;
@@ -441,11 +420,9 @@ class POSController extends Controller
         $order->id = $orderId;
 
         $order->user_id = session()->get('customer_id') ?? null;
-        $order->coupon_discount_title = $request->coupon_discount_title == 0 ? null : 'coupon_discount_title';
         $order->payment_status = ($orderType == 'take_away') ? 'paid' : (($orderType == 'dine_in' && $request->type != 'pay_after_eating') ? 'paid' : 'unpaid');
         $order->order_status = 'confirmed' ; // All orders start as confirmed for KDS
         $order->order_type = ($orderType == 'take_away') ? 'pos' : (($orderType == 'dine_in') ? 'dine_in' : (($orderType == 'home_delivery') ? 'delivery' : null));
-        $order->coupon_code = $request->coupon_code ?? null;
         $order->payment_method = $request->type;
         $order->transaction_reference = $request->transaction_reference ?? null;
         // $order->delivery_charge = $deliveryCharge;
@@ -558,10 +535,7 @@ class POSController extends Controller
             $order->total_tax_amount = $totalTaxAmount;
             $order->order_amount = $totalPrice + $totalTaxAmount + $order->delivery_charge+$totalAddonTax;
             $order->delivery_charge = $deliveryCharge;
-            $order->coupon_discount_amount = 0.00;
             $order->branch_id = auth('branch')->id();
-            $order->table_id = session()->get('table_id');
-            $order->number_of_people = session()->get('people_number');
 
             $order->save();
 
@@ -583,29 +557,13 @@ class POSController extends Controller
 
             session()->forget('customer_id');
             session()->forget('branch_id');
-            session()->forget('table_id');
             session()->forget('people_number');
             session()->forget('address');
             session()->forget('order_type');
 
             Toastr::success(translate('order_placed_successfully'));
 
-            //send notification to kitchen
-            if ($order->order_type == 'dine_in') {
-                $notification = new Notification;
-                $notification->title = "You have a new order from POS - (Order Confirmed). ";
-                $notification->description = $order->id;
-                $notification->status = 1;
-                $notification->order_id =  $order->id;
-                $notification->order_status = $order->order_status;
-
-                try {
-                    Helpers::send_push_notif_to_topic(data: $notification, topic: "kitchen-{$order->branch_id}", type: 'general', isNotificationPayloadRemove: true);
-                    Toastr::success(translate('Notification sent successfully!'));
-                } catch (\Exception $e) {
-                    Toastr::warning(translate('Push notification failed!'));
-                }
-            }
+            // Notification functionality removed
 
             //send notification to customer for home delivery
             if ($order->order_type == 'delivery'){
@@ -615,17 +573,7 @@ class POSController extends Controller
                 $local = $customer?->language_code ?? 'en';
                 $customerName = $customer?->f_name . ' '. $customer?->l_name ?? '';
 
-                if ($local != 'en'){
-                    $statusKey = Helpers::order_status_message_key('confirmed');
-                    $translatedMessage = $this->business_setting->with('translations')->where(['key' => $statusKey])->first();
-                    if (isset($translatedMessage->translations)){
-                        foreach ($translatedMessage->translations as $translation){
-                            if ($local == $translation->locale){
-                                $message = $translation->value;
-                            }
-                        }
-                    }
-                }
+                // Translation functionality removed - always use English
 
                 $restaurantName = Helpers::get_business_settings('restaurant_name');
                 $value = Helpers::text_variable_data_format(value:$message, user_name: $customerName, restaurant_name: $restaurantName,  order_id: $orderId);
@@ -676,7 +624,6 @@ class POSController extends Controller
     public function emptyCart(): JsonResponse
     {
         session()->forget('cart');
-        Session::forget('table_id');
         Session::forget('customer_id');
         Session::forget('people_number');
         session()->forget('address');
@@ -770,8 +717,6 @@ class POSController extends Controller
     {
         session()->forget('customer_id');
         session()->forget('branch_id');
-        session()->forget('table_id');
-        session()->forget('people_number');
         session()->forget('address');
         session()->forget('order_type');
         Toastr::success(translate('clear data successfully'));
@@ -833,7 +778,6 @@ class POSController extends Controller
     public function sessionDestroy(Request $request): JsonResponse
     {
         Session::forget('cart');
-        Session::forget('table_id');
         Session::forget('customer_id');
         Session::forget('people_number');
         session()->forget('address');

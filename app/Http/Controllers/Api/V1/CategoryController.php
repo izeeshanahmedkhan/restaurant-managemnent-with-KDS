@@ -25,7 +25,7 @@ class CategoryController extends Controller
         $search = $request->input('name', '');
 
         $categories = $this->category
-            ->with('childes', 'translations')
+            ->with('childes', '// translations removed')
             ->where('position', 0)
             ->where('status', 1)
             ->when($search, function ($query) use ($search) {

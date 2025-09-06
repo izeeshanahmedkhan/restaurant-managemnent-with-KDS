@@ -20,25 +20,15 @@ class AddOn extends Model
         return (float)Helpers::set_price($price);
     }
 
-    public function translations(): MorphMany
-    {
-        return $this->morphMany('App\Model\Translation', 'translationable');
-    }
+    // Translation functionality removed
 
     public function getNameAttribute($name)
     {
         if (strpos(url()->current(), '/admin')) {
             return $name;
         }
-        return $this->translations[0]->value ?? $name;
+        return $name; // Translation functionality removed
     }
 
-    protected static function booted()
-    {
-        static::addGlobalScope('translate', function (Builder $builder) {
-            $builder->with(['translations' => function ($query) {
-                return $query->where('locale', app()->getLocale());
-            }]);
-        });
-    }
+    // Translation functionality removed
 }

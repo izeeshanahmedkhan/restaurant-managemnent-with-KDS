@@ -7,10 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Model\Category;
 use App\Model\Product;
 use App\Model\ProductByBranch;
-use App\Model\Review;
+// Review functionality removed
 use App\Model\Tag;
-use App\Model\Translation;
-use App\Models\Cuisine;
+// Translation model removed
 use Box\Spout\Common\Exception\InvalidArgumentException;
 use Box\Spout\Common\Exception\IOException;
 use Box\Spout\Common\Exception\UnsupportedTypeException;
@@ -35,8 +34,7 @@ class ProductController extends Controller
         private Product         $product,
         private Category        $category,
         private ProductByBranch $productByBranch,
-        private Translation     $translation,
-        private Cuisine         $cuisine,
+        // Translation model removed
     )
     {}
 
@@ -98,8 +96,7 @@ class ProductController extends Controller
     public function index(): Renderable
     {
         $categories = $this->category->where(['parent_id' => 0])->get();
-        $cuisines = $this->cuisine::active()->orderBy('priority', 'ASC')->get();
-        return view('admin-views.product.index', compact('categories', 'cuisines'));
+        return view('admin-views.product.index', compact('categories'));
     }
 
     /**
@@ -153,16 +150,16 @@ class ProductController extends Controller
      */
     public function view($id): Renderable
     {
-        $product = $this->product->withoutGlobalScopes()->with(['translations', 'main_branch_product', 'cuisines'])->find($id);
+        $product = $this->product->withoutGlobalScopes()->with(['// translations removed', 'main_branch_product'])->find($id);
 
         $discount_data = [
             'discount_type' => $product['discount_type'],
             'discount' => $product['discount']
         ];
 
-        $reviews = Review::where(['product_id' => $id])->latest()->paginate(Helpers::getPagination());
+        // Review functionality removed
 
-        return view('admin-views.product.view', compact('product', 'reviews', 'discount_data'));
+        return view('admin-views.product.view', compact('product', 'discount_data'));
     }
 
     /**
@@ -319,7 +316,6 @@ class ProductController extends Controller
         $product->save();
 
         $product->tags()->sync($tagIds);
-        $product->cuisines()->sync($request->cuisines);
 
         $mainBranchProduct = $this->productByBranch;
         $mainBranchProduct->product_id = $product->id;
@@ -338,28 +334,7 @@ class ProductController extends Controller
 
         $mainBranchProduct->save();
 
-        $data = [];
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $data[] = array(
-                    'translationable_type' => 'App\Model\Product',
-                    'translationable_id' => $product->id,
-                    'locale' => $key,
-                    'key' => 'name',
-                    'value' => $request->name[$index],
-                );
-            }
-            if ($request->description[$index] && $key != 'en') {
-                $data[] = array(
-                    'translationable_type' => 'App\Model\Product',
-                    'translationable_id' => $product->id,
-                    'locale' => $key,
-                    'key' => 'description',
-                    'value' => strip_tags($request->description[$index]),
-                );
-            }
-        }
-        $this->translation->insert($data);
+        // Translation functionality removed - always use English
 
         return response()->json([], 200);
     }
@@ -371,12 +346,10 @@ class ProductController extends Controller
      */
     public function edit($id): View|Factory|Application
     {
-        $product = $this->product->withoutGlobalScopes()->with(['translations', 'main_branch_product', 'cuisines'])->find($id);
+        $product = $this->product->withoutGlobalScopes()->with(['// translations removed', 'main_branch_product'])->find($id);
         $product_category = json_decode($product->category_ids);
         $categories = $this->category->where(['parent_id' => 0])->get();
-        $cuisines = $this->cuisine::active()->orderBy('priority', 'ASC')->get();
-
-        return view('admin-views.product.edit', compact('product', 'product_category', 'categories', 'cuisines'));
+        return view('admin-views.product.edit', compact('product', 'product_category', 'categories'));
     }
 
     /**
@@ -592,7 +565,6 @@ class ProductController extends Controller
         $product->save();
 
         $product->tags()->sync($tagIds);
-        $product->cuisines()->sync($request->cuisines);
 
         $productBranchData = [
             'product_id'     => $product->id,
@@ -624,26 +596,7 @@ class ProductController extends Controller
             $updatedProduct->save();
         }
 
-        foreach ($request->lang as $index => $key) {
-            if ($request->name[$index] && $key != 'en') {
-                $this->translation->updateOrInsert(
-                    ['translationable_type' => 'App\Model\Product',
-                        'translationable_id' => $product->id,
-                        'locale' => $key,
-                        'key' => 'name'],
-                    ['value' => $request->name[$index]]
-                );
-            }
-            if ($request->description[$index] && $key != 'en') {
-                $this->translation->updateOrInsert(
-                    ['translationable_type' => 'App\Model\Product',
-                        'translationable_id' => $product->id,
-                        'locale' => $key,
-                        'key' => 'description'],
-                    ['value' => strip_tags($request->description[$index])]
-                );
-            }
-        }
+        // Translation functionality removed - always use English
 
         return response()->json([], 200);
     }
@@ -662,155 +615,13 @@ class ProductController extends Controller
         return redirect()->route('admin.product.list');
     }
 
-    /**
-     * @return Renderable
-     */
-    public function bulkImportIndex(): Renderable
-    {
-        return view('admin-views.product.bulk-import');
-    }
+    // Product import functionality removed
 
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function bulkImportData(Request $request): RedirectResponse
-    {
-        try {
-            $collections = (new FastExcel)->import($request->file('products_file'));
-        } catch (\Exception $exception) {
-            Toastr::error(translate('You have uploaded a wrong format file, please upload the right file.'));
-            return back();
-        }
-
-        $fieldArray = ['name', 'description', 'price', 'tax', 'category_id', 'sub_category_id', 'discount', 'discount_type', 'tax_type', 'set_menu', 'available_time_starts', 'available_time_ends', 'product_type'];
-        if (count($collections) < 1) {
-            Toastr::error(translate('At least one product have to import.'));
-            return back();
-        }
-        foreach ($fieldArray as $field) {
-            if (!array_key_exists($field, $collections->first())) {
-                Toastr::error(translate($field) . translate(' must not be empty.'));
-                return back();
-            }
-        }
-
-        $data = [];
-        foreach ($collections as $key => $collection) {
-            if ($collection['name'] === "") {
-                Toastr::error(translate('Please fill name field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['description'] === "") {
-                Toastr::error(translate('Please fill description field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['price'] === "") {
-                Toastr::error(translate('Please fill price field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['tax'] === "") {
-                Toastr::error(translate('Please fill tax field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['category_id'] === "") {
-                Toastr::error(translate('Please fill category_id field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['sub_category_id'] === "") {
-                Toastr::error(translate('Please fill sub_category_id field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['discount'] === "") {
-                Toastr::error(translate('Please fill discount field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['discount_type'] === "") {
-                Toastr::error(translate('Please fill discount_type field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['tax_type'] === "") {
-                Toastr::error(translate('Please fill tax_type field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if ($collection['set_menu'] === "") {
-                Toastr::error(translate('Please fill set_menu field of row') . ' ' . ($key + 2));
-                return back();
-            }
-
-            if ($collection['product_type'] === "") {
-                Toastr::error(translate('Please fill product_type field of row') . ' ' . ($key + 2));
-                return back();
-            }
-
-            if (!is_numeric($collection['price'])) {
-                Toastr::error(translate('Price of row') . ' ' . ($key + 2) . ' ' . translate('must be number'));
-                return back();
-            }
-
-            if (!is_numeric($collection['discount'])) {
-                Toastr::error(translate('Discount of row') . ' ' . ($key + 2) . ' ' . translate('must be number'));
-                return back();
-            }
-
-            if (!is_numeric($collection['tax'])) {
-                Toastr::error(translate('Tax of row') . ' ' . ($key + 2) . ' ' . ' must be number');
-                return back();
-            }
-
-            $product = [
-                'discount_type' => $collection['discount_type'],
-                'discount' => $collection['discount'],
-            ];
-            if ($collection['price'] <= Helpers::discount_calculate($product, $collection['price'])) {
-                Toastr::error(translate('Discount can not be more or equal to the price in row') . ' ' . ($key + 2));
-                return back();
-            }
-            if (!isset($collection['available_time_starts'])) {
-                Toastr::error(translate('Please fill available_time_starts field'));
-                return back();
-            } elseif ($collection['available_time_starts'] === "") {
-                Toastr::error(translate('Please fill available_time_starts field of row') . ' ' . ($key + 2));
-                return back();
-            }
-            if (!isset($collection['available_time_ends'])) {
-                Toastr::error(translate('Please fill available_time_ends field'));
-                return back();
-            } elseif ($collection['available_time_ends'] === "") {
-                Toastr::error(translate('Please fill available_time_ends field of row ') . ' ' . ($key + 2));
-                return back();
-            }
-        }
-
-        foreach ($collections as $collection) {
-            $data[] = [
-                'name' => $collection['name'],
-                'description' => $collection['description'],
-                'image' => 'def.png',
-                'price' => $collection['price'],
-                'variations' => json_encode([]),
-                'add_ons' => json_encode([]),
-                'tax' => $collection['tax'],
-                'available_time_starts' => $collection['available_time_starts'],
-                'available_time_ends' => $collection['available_time_ends'],
-                'status' => 1,
-                'attributes' => json_encode([]),
-                'category_ids' => json_encode([['id' => (string)$collection['category_id'], 'position' => 1], ['id' => (string)$collection['sub_category_id'], 'position' => 2]]),
-                'choice_options' => json_encode([]),
-                'discount' => $collection['discount'],
-                'discount_type' => $collection['discount_type'],
-                'tax_type' => $collection['tax_type'],
-                'set_menu' => $collection['set_menu'],
-                'product_type' => $collection['product_type'],
-                'created_at' => now(),
-                'updated_at' => now()
-            ];
-        }
-        $this->product->insert($data);
-
-        Toastr::success(count($data) . ' - ' . translate('Products imported successfully!'));
-        return back();
-    }
+    // Product import data functionality removed
 
 
     /**
@@ -821,66 +632,8 @@ class ProductController extends Controller
      * @throws UnsupportedTypeException
      * @throws WriterNotOpenedException
      */
-    public function bulkExportData(Request $request): StreamedResponse|string|RedirectResponse
-    {
-        if ($request->type == 'date_wise') {
-            $request->validate([
-                'start_date' => 'required',
-                'end_date' => 'required'
-            ]);
-        }
-        $startDate = Carbon::parse($request->start_date)->startOfDay();
-        $endDate = Carbon::parse($request->end_date)->endOfDay();
+    // Product export functionality removed
 
-        $products = $this->product->when($request['type'] == 'date_wise', function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        })->get();
-
-        $storage = [];
-
-        if ($products->count() < 1) {
-            Toastr::info(translate('no_product_found'));
-            return back();
-        }
-
-        foreach ($products as $item) {
-            $categoryId = 0;
-            $subCategoryId = 0;
-            foreach (json_decode($item->category_ids, true) as $category) {
-                if ($category['position'] == 1) {
-                    $categoryId = $category['id'];
-                } else if ($category['position'] == 2) {
-                    $subCategoryId = $category['id'];
-                }
-            }
-
-            if (!isset($item->name)) {
-                $item->name = 'Demo Product';
-            }
-
-            if (!isset($item->description)) {
-                $item->description = 'No description available';
-            }
-
-            $storage[] = [
-                'name' => $item->name,
-                'description' => $item->description,
-                'category_id' => $categoryId,
-                'sub_category_id' => $subCategoryId,
-                'price' => $item->price,
-                'tax' => $item->tax,
-                'available_time_starts' => $item->available_time_starts,
-                'available_time_ends' => $item->available_time_ends,
-                'status' => $item->status,
-                'discount' => $item->discount,
-                'discount_type' => $item->discount_type,
-                'tax_type' => $item->tax_type,
-                'set_menu' => $item->set_menu,
-                'product_type' => $item->product_type,
-            ];
-        }
-        return (new FastExcel($storage))->download('products.xlsx');
-    }
 
 
     /**
@@ -891,61 +644,12 @@ class ProductController extends Controller
      * @throws UnsupportedTypeException
      * @throws WriterNotOpenedException
      */
-    public function excelImport(Request $request): StreamedResponse|string
-    {
-        $storage = [];
-        $search = $request['search'];
-        $products = $this->product->when($search, function ($query) use ($search) {
-            $key = explode(' ', $search);
-            foreach ($key as $value) {
-                $query->orWhere('id', 'like', "%{$value}%")
-                    ->orWhere('name', 'like', "%{$value}%");
-            };
-        })->get();
-
-        foreach ($products as $item) {
-            $categoryId = 0;
-            $subCategoryId = 0;
-            foreach (json_decode($item->category_ids, true) as $category) {
-                if ($category['position'] == 1) {
-                    $categoryId = $category['id'];
-                } elseif ($category['position'] == 2) {
-                    $subCategoryId = $category['id'];
-                }
-            }
-            if (!isset($item->name)) {
-                $item->name = 'Demo Product';
-            }
-            if (!isset($item->description)) {
-                $item->description = 'No description available';
-            }
-            $storage[] = array(
-                'Name' => $item->name,
-                'Description' => $item->description,
-                'Category ID' => $categoryId,
-                'Sub Category ID' => $subCategoryId,
-                'Price' => $item->price,
-                'Tax' => $item->tax,
-                'Available Time Starts' => $item->available_time_starts,
-                'Available Time Ends' => $item->available_time_ends,
-                'Status' => $item->status,
-                'Discount' => $item->discount,
-                'Discount Type' => $item->discount_type,
-                'Tax Type' => $item->tax_type,
-                'Set Menu' => $item->set_menu,
-                'Product Type' => $item->product_type,
-            );
-        }
-        return (new FastExcel($storage))->download('products.xlsx');
-    }
+    // Product excel import functionality removed
 
     /**
      * @return Renderable
      */
-    public function bulkExportIndex(): Renderable
-    {
-        return view('admin-views.product.bulk-export');
-    }
+    // Product export index functionality removed
 
     /**
      * @param Request $request

@@ -28,10 +28,6 @@ class Branch extends Authenticatable
         return $this->hasMany(BranchPromotion::class);
     }
 
-    public function table(): HasMany
-    {
-        return $this->hasMany(Table::class, 'branch_id', 'id');
-    }
 
     public function orders(): HasMany
     {
