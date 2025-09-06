@@ -35,7 +35,7 @@ class KitchenController extends Controller
         $limit = is_null($request['limit']) ? 10 : $request['limit'];
         $offset = is_null($request['offset']) ? 1 : $request['offset'];
 
-        $chefBranch = $this->chefBranch->where('user_id', auth()->user()->id)->first();
+        $chefBranch = $this->chefBranch->where('user_id', auth('api')->user()->id)->first();
 
         $orders = $this->order->with('table')
             ->whereIn('order_status', ['confirmed', 'cooking'])
@@ -52,7 +52,7 @@ class KitchenController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
-        $chefBranch = $this->chefBranch->where('user_id', auth()->user()->id)->first();
+        $chefBranch = $this->chefBranch->where('user_id', auth('api')->user()->id)->first();
         $branchId = $chefBranch->branch_id;
 
         $search = $request['search'];
@@ -81,7 +81,7 @@ class KitchenController extends Controller
         $limit = is_null($request['limit']) ? 10 : $request['limit'];
         $offset = is_null($request['offset']) ? 1 : $request['offset'];
 
-        $chefBranch = $this->chefBranch->where('user_id', auth()->user()->id)->first();
+        $chefBranch = $this->chefBranch->where('user_id', auth('api')->user()->id)->first();
         $branchId = $chefBranch->branch_id;
 
         $orderStatus = $request->order_status;
@@ -168,7 +168,7 @@ class KitchenController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $kitchen = $this->user->find(auth()->user()->id);
+        $kitchen = $this->user->find(auth('api')->user()->id);
 
         if (!isset($kitchen)) {
             return response()->json([
@@ -189,8 +189,8 @@ class KitchenController extends Controller
      */
     public function getProfile(): JsonResponse
     {
-        $kitchen = $this->user->find(auth()->user()->id);
-        $chefBranch = $this->chefBranch->where('user_id', auth()->user()->id)->first();
+        $kitchen = $this->user->find(auth('api')->user()->id);
+        $chefBranch = $this->chefBranch->where('user_id', auth('api')->user()->id)->first();
         $branch = $this->branch->where('id', $chefBranch->branch_id)->first();
 
         return response()->json([

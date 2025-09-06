@@ -1089,11 +1089,12 @@ class BusinessSettingsController extends Controller
      */
     public function updateDeliveryFee(Request $request): RedirectResponse
     {
-        if ($request->delivery_charge == null) {
-            $request->delivery_charge = $this->business_setting->where(['key' => 'delivery_charge'])->first()->value;
+        $deliveryCharge = $request->delivery_charge;
+        if ($deliveryCharge == null) {
+            $deliveryCharge = $this->business_setting->where(['key' => 'delivery_charge'])->first()->value;
         }
         $this->InsertOrUpdateBusinessData(['key' => 'delivery_charge'], [
-            'value' => $request->delivery_charge,
+            'value' => $deliveryCharge,
         ]);
 
         // Delivery man functionality removed - using default values

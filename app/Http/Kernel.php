@@ -6,7 +6,7 @@ use App\Http\Middleware\ActivationCheckMiddleware;
 use App\Http\Middleware\ApiActiveCustomer;
 use App\Http\Middleware\AdminMiddleware;
 // Delivery man functionality removed
-use App\Http\Middleware\AppActivation;
+// AppActivation middleware removed
 use App\Http\Middleware\BranchAdder;
 use App\Http\Middleware\BranchMiddleware;
 use App\Http\Middleware\BranchStatusCheck;
@@ -80,7 +80,7 @@ class Kernel extends HttpKernel
         'actch' => ActivationCheckMiddleware::class,
         'localization' => \App\Http\Middleware\localization::class,
         'module' => ModulePermissionMiddleware::class,
-        'app_activate'=>AppActivation::class,
+        // 'app_activate'=>AppActivation::class, // Removed
         'is_active' => ApiActiveCustomer::class,
         // Delivery man functionality removed
         'branch_status' => BranchStatusCheck::class,
