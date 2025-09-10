@@ -42,7 +42,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
     Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout')->middleware('admin');
 
     Route::group(['middleware' => ['admin']], function () {
-        Route::get('/fcm/{id}', [DashboardController::class, 'fcm'])->name('fcm');     //test route
         Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::post('order-stats', [DashboardController::class, 'orderStats'])->name('order-stats');
         Route::get('settings', [SystemController::class, 'settings'])->name('settings');
@@ -251,7 +250,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
 
             });
 
-            Route::post('update-fcm-messages', [BusinessSettingsController::class, 'updateFcmMessages'])->name('update-fcm-messages');
 
             Route::group(['prefix' => 'page-setup', 'as' => 'page-setup.', 'middleware' => ['module:system_management']], function () {
                 Route::get('terms-and-conditions', [BusinessSettingsController::class, 'termsAndConditions'])->name('terms-and-conditions')->middleware('actch');

@@ -22,7 +22,6 @@ use App\Http\Controllers\Api\V1\WishlistController;
 
 Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function () {
 
-    Route::post('fcm-subscribe-to-topic', [CustomerController::class, 'fcmSubscribeToTopic']);
 
     // Kiosk API routes
     Route::group(['prefix' => 'kiosk'], function () {
@@ -68,7 +67,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::post('verify-phone', [CustomerAuthController::class, 'verifyPhone']);
         Route::post('check-email', [CustomerAuthController::class, 'checkEmail']);
         Route::post('verify-email', [CustomerAuthController::class, 'verifyEmail']);
-        Route::post('firebase-auth-verify', [CustomerAuthController::class, 'firebaseAuthVerify']);
         Route::post('verify-otp', [CustomerAuthController::class, 'verifyOTP']);
         Route::post('registration-with-otp', [CustomerAuthController::class, 'registrationWithOTP']);
         Route::post('existing-account-check', [CustomerAuthController::class, 'existingAccountCheck']);
@@ -128,7 +126,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::get('info', [CustomerController::class, 'info']);
         Route::put('update-profile', [CustomerController::class, 'updateProfile']);
         Route::post('verify-profile-info', [CustomerController::class, 'verifyProfileInfo']);
-        Route::put('cm-firebase-token', [CustomerController::class, 'updateFirebaseToken'])->withoutMiddleware(['auth:api', 'is_active']);
         Route::get('transaction-history', [CustomerController::class, 'getTransactionHistory']);
         Route::post('update-referral-check', [CustomerController::class, 'updateReferralCheck']);
 
@@ -184,7 +181,6 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::get('order/filter', [KitchenController::class, 'filterByStatus']);
         Route::get('order/details', [KitchenController::class, 'getOrderDetails']);
         Route::put('order/status', [KitchenController::class, 'changeStatus']);
-        Route::put('update-fcm-token', [KitchenController::class, 'updateFcmToken']);
     });
 
     Route::group(['prefix' => 'guest'], function () {

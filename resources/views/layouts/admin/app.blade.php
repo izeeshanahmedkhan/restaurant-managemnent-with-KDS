@@ -132,9 +132,6 @@
 <script src="{{asset('assets/admin')}}/js/sweet_alert.js"></script>
 <script src="{{asset('assets/admin')}}/js/toastr.js"></script>
 <script src="{{asset('assets/admin/js/owl.min.js')}}"></script>
-<!-- Firebase SDK v10 Compat (Production Build) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
 
 {!! Toastr::message() !!}
 
@@ -579,65 +576,6 @@
             }, 10000);
         @endif
 
-        @if($admin_order_notification_type == 'firebase')
-            @php($fcm_credentials = \App\CentralLogics\Helpers::get_business_settings('fcm_credentials'))
-            var firebaseConfig = {
-                apiKey: "{{isset($fcm_credentials['apiKey']) ? $fcm_credentials['apiKey'] : ''}}",
-                authDomain: "{{isset($fcm_credentials['authDomain']) ? $fcm_credentials['authDomain'] : ''}}",
-                projectId: "{{isset($fcm_credentials['projectId']) ? $fcm_credentials['projectId'] : ''}}",
-                storageBucket: "{{isset($fcm_credentials['storageBucket']) ? $fcm_credentials['storageBucket'] : ''}}",
-                messagingSenderId: "{{isset($fcm_credentials['messagingSenderId']) ? $fcm_credentials['messagingSenderId'] : ''}}",
-                appId: "{{isset($fcm_credentials['appId']) ? $fcm_credentials['appId'] : ''}}",
-                measurementId: "{{isset($fcm_credentials['measurementId']) ? $fcm_credentials['measurementId'] : ''}}"
-            };
-
-
-            firebase.initializeApp(firebaseConfig);
-            const messaging = firebase.messaging();
-
-            function startFCM() {
-                messaging
-                    .requestPermission()
-                    .then(function() {
-                        return messaging.getToken();
-                    })
-                    .then(function(token) {
-                        subscribeTokenToBackend(token, 'admin_message');
-                    }).catch(function(error) {
-                        console.error('Error getting permission or token:', error);
-                });
-            }
-
-            function subscribeTokenToBackend(token, topic) {
-                fetch('{{url('/')}}/subscribeToTopic', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ token: token, topic: topic })
-                }).then(response => {
-                    if (response.status < 200 || response.status >= 400) {
-                        return response.text().then(text => {
-                            throw new Error(`Error subscribing to topic: ${response.status} - ${text}`);
-                        });
-                    }
-                    console.log(`Subscribed to "${topic}"`);
-                }).catch(error => {
-                    console.error('Subscription error:', error);
-                });
-            }
-
-            messaging.onMessage(function(payload) {
-                console.log(payload.data);
-                if(payload.data.order_id && payload.data.type == "order_request"){
-                    playAudio();
-                    $('#popup-modal').appendTo("body").modal('show');
-                }
-            });
-
-            startFCM();
-        @endif
     @endif
 
 </script>

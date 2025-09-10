@@ -709,7 +709,7 @@
                     
                     // Send AJAX request
                     $.ajax({
-                        url: "{{ route('admin.pos.payment-status-update') }}",
+                        url: "{{ url('admin/pos/payment-status-update') }}",
                         method: 'POST',
                         data: formData,
                         headers: {

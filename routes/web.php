@@ -4,7 +4,6 @@ use App\Model\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FirebaseController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\View;
@@ -50,7 +49,6 @@ Route::get('/image-proxy', function () {
         ->header('Access-Control-Allow-Origin', '*');
 });
 
-Route::post('/subscribeToTopic', [FirebaseController::class, 'subscribeToTopic']);
 
 /**
  * Pages

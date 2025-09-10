@@ -484,230 +484,19 @@ class BusinessSettingsController extends Controller
     /**
      * @return Renderable
      */
-    public function fcmIndex(): Renderable
-    {
-        $data = $this->business_setting->where(['key' => 'order_pending_message'])->first();
-        if (!$this->business_setting->where(['key' => 'order_pending_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'order_pending_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'order_confirmation_msg'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'order_confirmation_msg',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'order_processing_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'order_processing_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'out_for_delivery_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'out_for_delivery_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'order_delivered_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'order_delivered_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'delivery_boy_assign_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'delivery_boy_assign_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'delivery_boy_start_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'delivery_boy_start_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'delivery_boy_delivered_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'delivery_boy_delivered_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'customer_notify_message'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'customer_notify_message',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        if (!$this->business_setting->where(['key' => 'customer_notify_message_for_time_change'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'customer_notify_message_for_time_change',
-                'value' => json_encode([
-                    'status' => 0,
-                    'message' => '',
-                ]),
-            ]);
-        }
-
-        return view('admin-views.business-settings.fcm-index');
-    }
 
     /**
      * @return Application|Factory|View
      */
-    public function fcmConfig(): Factory|View|Application
-    {
-        if (!$this->business_setting->where(['key' => 'fcm_topic'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'fcm_topic',
-                'value' => '',
-            ]);
-        }
-        if (!$this->business_setting->where(['key' => 'fcm_project_id'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'fcm_project_id',
-                'value' => '',
-            ]);
-        }
-        if (!$this->business_setting->where(['key' => 'push_notification_key'])->first()) {
-            $this->business_setting->insert([
-                'key' => 'push_notification_key',
-                'value' => '',
-            ]);
-        }
-
-        $fcm_credentials = Helpers::get_business_settings('fcm_credentials');
-
-        return view('admin-views.business-settings.fcm-config', compact('fcm_credentials'));
-    }
 
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function updateFcm(Request $request): RedirectResponse
-    {
-        $this->InsertOrUpdateBusinessData(['key' => 'push_notification_service_file_content'], [
-            'value' => $request['push_notification_service_file_content'],
-        ]);
-
-        $this->InsertOrUpdateBusinessData(['key' => 'fcm_project_id'], [
-            'value' => $request['projectId'],
-        ]);
-
-        $this->InsertOrUpdateBusinessData(['key' => 'fcm_credentials'], [
-            'value' => json_encode([
-                'apiKey' => $request->apiKey,
-                'authDomain' => $request->authDomain,
-                'projectId' => $request->projectId,
-                'storageBucket' => $request->storageBucket,
-                'messagingSenderId' => $request->messagingSenderId,
-                'appId' => $request->appId,
-                'measurementId' => $request->measurementId
-            ])
-        ]);
-
-
-        self::firebase_message_config_file_gen();
-
-        Toastr::success(translate('Settings updated!'));
-        return back();
-    }
 
     /**
      * @return void
      */
-    function firebase_message_config_file_gen(): void
-    {
-        $config = Helpers::get_business_settings('fcm_credentials');
-
-        $apiKey = $config['apiKey'] ?? '';
-        $authDomain = $config['authDomain'] ?? '';
-        $projectId = $config['projectId'] ?? '';
-        $storageBucket = $config['storageBucket'] ?? '';
-        $messagingSenderId = $config['messagingSenderId'] ?? '';
-        $appId = $config['appId'] ?? '';
-        $measurementId = $config['measurementId'] ?? '';
-
-        $filePath = base_path('firebase-messaging-sw.js');
-
-        try {
-            if (file_exists($filePath) && !is_writable($filePath)) {
-                if (!chmod($filePath, 0644)) {
-                    throw new \Exception('File is not writable and permission change failed: ' . $filePath);
-                }
-            }
-
-            $fileContent = <<<JS
-                importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-                importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
-
-                firebase.initializeApp({
-                    apiKey: "$apiKey",
-                    authDomain: "$authDomain",
-                    projectId: "$projectId",
-                    storageBucket: "$storageBucket",
-                    messagingSenderId: "$messagingSenderId",
-                    appId: "$appId",
-                    measurementId: "$measurementId"
-                });
-
-                const messaging = firebase.messaging();
-                messaging.setBackgroundMessageHandler(function (payload) {
-                    return self.registration.showNotification(payload.data.title, {
-                        body: payload.data.body ? payload.data.body : '',
-                        icon: payload.data.icon ? payload.data.icon : ''
-                    });
-                });
-                JS;
-
-
-            if (file_put_contents($filePath, $fileContent) === false) {
-                throw new \Exception('Failed to write to file: ' . $filePath);
-            }
-
-        } catch (\Exception $e) {
-            //
-        }
-    }
 
     /**
      * @param Request $request
@@ -1073,10 +862,6 @@ class BusinessSettingsController extends Controller
     /**
      * @return Renderable
      */
-    public function firebaseMessageConfigIndex(): Renderable
-    {
-        return view('admin-views.business-settings.firebase-config-index');
-    }
 
     /**
      * @return Renderable
