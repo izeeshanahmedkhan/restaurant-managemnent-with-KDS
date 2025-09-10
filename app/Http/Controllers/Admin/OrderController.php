@@ -276,7 +276,7 @@ class OrderController extends Controller
             ->first();
 
         if (!isset($order)) {
-            Toastr::info(translate('No order found!'));
+            Toastr::info('No order found!');
             return back();
         }
 
@@ -290,6 +290,7 @@ class OrderController extends Controller
         $remainingTime = $orderedTime->add($order['preparation_time'], 'minute')->format('Y-m-d H:i:s');
         $order['remaining_time'] = $remainingTime;
 
+
         return view('admin-views.order.order-view', compact('order'));
     }
 
@@ -302,18 +303,18 @@ class OrderController extends Controller
         $order = $this->order->find($request->id);
 
         if (in_array($order->order_status, ['delivered', 'failed'])) {
-            Toastr::warning(translate('you_can_not_change_the_status_of '. $order->order_status .' order'));
+            Toastr::warning('You can not change the status of '. $order->order_status .' order');
             return back();
         }
 
         if ($request->order_status == 'delivered' && $order['transaction_reference'] == null && !in_array($order['payment_method'], ['cash_on_delivery', 'wallet_payment', 'offline_payment'])) {
-            Toastr::warning(translate('add_your_payment_reference_first'));
+            Toastr::warning('Add your payment reference first');
             return back();
         }
 
         // Delivery man validation removed
         if ($request->order_status == 'completed' && $order->payment_status != 'paid') {
-            Toastr::warning(translate('Please update payment status first!'));
+            Toastr::warning('Please update payment status first!');
             return back();
         }
 
@@ -383,7 +384,7 @@ class OrderController extends Controller
         try {
             if ($value) {
                 $data = [
-                    'title' => translate('Order'),
+                    'title' => 'Order',
                     'description' => $value,
                     'order_id' => $order['id'],
                     'image' => '',
@@ -401,7 +402,7 @@ class OrderController extends Controller
         // Delivery man functionality removed
         // Notification functionality removed
 
-        Toastr::success(translate('Order status updated!'));
+        Toastr::success('Order status updated!');
         return back();
     }
 
@@ -464,7 +465,7 @@ class OrderController extends Controller
                     $customerFcmToken = $customer?->cm_firebase_token;
 
                     $data = [
-                        'title' => translate('Order'),
+                        'title' => 'Order',
                         'description' => $value,
                         'order_id' => $order['id'],
                         'image' => '',
@@ -472,7 +473,7 @@ class OrderController extends Controller
                     ];
                     Helpers::send_push_notif_to_device($customerFcmToken, $data);
                 } else {
-                    throw new \Exception(translate('failed'));
+                    throw new \Exception('Failed');
                 }
 
             } catch (\Exception $e) {
@@ -480,7 +481,7 @@ class OrderController extends Controller
             }
         }
 
-        Toastr::success(translate('Order preparation time updated'));
+        Toastr::success('Order preparation time updated');
         return back();
     }
 
@@ -496,17 +497,65 @@ class OrderController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function paymentStatus(Request $request): RedirectResponse
+    public function paymentStatus(Request $request)
     {
-        $order = $this->order->find($request->id);
+        $order = $this->order->find($request->order_id ?? $request->id);
+        
+        if (!$order) {
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Order not found'], 404);
+            }
+            Toastr::error('Order not found!');
+            return back();
+        }
+        
+        // Handle POST request from modal
+        if ($request->isMethod('post')) {
+            $paymentAction = $request->payment_action;
+            
+            if ($paymentAction === 'paid') {
+                // Mark as paid
+                $order->payment_status = 'paid';
+                
+                // Update payment method if provided
+                if ($request->payment_method) {
+                    $order->payment_method = $request->payment_method;
+                }
+                
+                // Update transaction reference if provided
+                if ($request->reference_code) {
+                    $order->transaction_reference = $request->reference_code;
+                }
+                
+            } elseif ($paymentAction === 'refund') {
+                // Mark as refunded
+                $order->payment_status = 'refunded';
+                
+                // Store refund reason if provided
+                if ($request->refund_reason) {
+                    $order->refund_reason = $request->refund_reason;
+                }
+            }
+            
+            $order->save();
+            
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Payment status updated successfully']);
+            }
+            
+            Toastr::success('Payment status updated!');
+            return back();
+        }
+        
+        // Handle GET request (legacy support)
         if ($request->payment_status == 'paid' && $order['transaction_reference'] == null &&  $order['order_type'] != 'dine_in' && !in_array($order['payment_method'], ['cash_on_delivery', 'wallet_payment', 'offline_payment', 'cash'])) {
-            Toastr::warning(translate('Add your payment reference code first!'));
+            Toastr::warning('Add your payment reference code first!');
             return back();
         }
         $order->payment_status = $request->payment_status;
         $order->save();
 
-        Toastr::success(translate('Payment status updated!'));
+        Toastr::success('Payment status updated!');
         return back();
     }
 
@@ -564,7 +613,7 @@ class OrderController extends Controller
             'transaction_reference' => $request['transaction_reference']
         ]);
 
-        Toastr::success(translate('Payment reference code is added!'));
+        Toastr::success('Payment reference code is added!');
         return back();
     }
 
@@ -698,12 +747,12 @@ class OrderController extends Controller
 
         $order = $this->order->find($order_id);
         if (!$order){
-            Toastr::warning(translate('order not found'));
+            Toastr::warning('Order not found');
             return back();
         }
 
         if ($order->order_status == 'delivered') {
-            Toastr::warning(translate('you_can_not_change_the_area_once_the_order_status_is_delivered'));
+            Toastr::warning('You can not change the area once the order status is delivered');
             return back();
         }
 
@@ -712,13 +761,13 @@ class OrderController extends Controller
             ->first(['id', 'name', 'status']);
 
         if ($branch->delivery_charge_setup->delivery_charge_type != 'area') {
-            Toastr::warning(translate('this branch selected delivery type is not area'));
+            Toastr::warning('This branch selected delivery type is not area');
             return back();
         }
 
         $area = DeliveryChargeByArea::where(['id' => $request['selected_area_id'], 'branch_id' => $order->branch_id])->first();
         if (!$area){
-            Toastr::warning(translate('Area not found'));
+            Toastr::warning('Area not found');
             return back();
         }
 
@@ -739,8 +788,8 @@ class OrderController extends Controller
         try {
             if ($customerFcmToken != null) {
                 $data = [
-                    'title' => translate('Order'),
-                    'description' => translate('order delivery area updated'),
+                    'title' => 'Order',
+                    'description' => 'Order delivery area updated',
                     'order_id' => $order['id'],
                     'image' => '',
                     'type' => 'order_status',
@@ -751,7 +800,7 @@ class OrderController extends Controller
             //
         }
 
-        Toastr::success(translate('Order delivery area updated successfully.'));
+        Toastr::success('Order delivery area updated successfully.');
         return back();
     }
 

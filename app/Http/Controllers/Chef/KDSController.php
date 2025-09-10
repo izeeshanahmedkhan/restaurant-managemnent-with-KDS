@@ -166,6 +166,36 @@ class KDSController extends Controller
                         $variations = $variations ? [$variations] : [];
                     }
                     
+                    // Format variations for display
+                    $variationText = '';
+                    if (is_array($variations)) {
+                        $variationLabels = [];
+                        foreach ($variations as $variation) {
+                            if (isset($variation['name']) && isset($variation['values'])) {
+                                $variationName = $variation['name'];
+                                $variationValues = [];
+                                
+                                // Handle the actual structure: values.label is an array of selected values
+                                if (is_array($variation['values']) && isset($variation['values']['label']) && is_array($variation['values']['label'])) {
+                                    $variationValues = $variation['values']['label'];
+                                }
+                                // Handle array of value objects with label and optionPrice
+                                elseif (is_array($variation['values'])) {
+                                    foreach ($variation['values'] as $value) {
+                                        if (isset($value['label'])) {
+                                            $variationValues[] = $value['label'];
+                                        }
+                                    }
+                                }
+                                
+                                if (!empty($variationValues)) {
+                                    $variationLabels[] = $variationName . ': ' . implode(', ', $variationValues);
+                                }
+                            }
+                        }
+                        $variationText = implode(' | ', $variationLabels);
+                    }
+                    
                     // Parse addons from JSON
                     if (is_string($addons)) {
                         try {
@@ -195,20 +225,12 @@ class KDSController extends Controller
                         }
                     }
                     
-                    // Format variations for display
-                    $variationText = '';
-                    if (!empty($variations)) {
-                        $variationLabels = [];
-                        foreach ($variations as $variation) {
-                            if (isset($variation['values']) && is_array($variation['values'])) {
-                                foreach ($variation['values'] as $value) {
-                                    if (isset($value['label'])) {
-                                        $variationLabels[] = $value['label'];
-                                    }
-                                }
-                            }
-                        }
-                        $variationText = implode(', ', $variationLabels);
+                    // Format addons for display
+                    $addonText = '';
+                    if (!empty($addonDetails)) {
+                        $addonText = implode(', ', array_map(function($addon) {
+                            return $addon['name'] . ($addon['quantity'] > 1 ? ' (x' . $addon['quantity'] . ')' : '');
+                        }, $addonDetails));
                     }
                     
                     return [

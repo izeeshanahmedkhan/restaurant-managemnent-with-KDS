@@ -105,9 +105,9 @@ class Helpers
                     $result[$k] = $product_variation;
                     $result[$k]['values'] = [];
                     foreach($product_variation['values'] as $key=> $option){
-                        if(in_array($option['label'], $variation['values']['label'])){
+                        if(isset($option['label']) && isset($variation['values']['label']) && in_array($option['label'], $variation['values']['label'])){
                             $result[$k]['values'][] = $option;
-                            $variation_price += $option['optionPrice'];
+                            $variation_price += isset($option['optionPrice']) ? $option['optionPrice'] : 0;
                         }
                     }
                 }
@@ -1063,6 +1063,20 @@ class Helpers
             return $src;
         }
         return $error_src;
+    }
+
+    /**
+     * Generate asset URL with proper path for development server
+     * This handles the difference between artisan serve and web server
+     */
+    public static function assetUrl($path)
+    {
+        // If running on artisan serve, prepend 'public/' to asset paths
+        if (app()->runningInConsole() || request()->server('SERVER_SOFTWARE') === 'PHP Development Server') {
+            return asset('public/' . ltrim($path, '/'));
+        }
+        
+        return asset($path);
     }
 
 }

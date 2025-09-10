@@ -36,21 +36,6 @@
                             </div>
                             <div class="col-lg-8">
                                 <div class="d-flex gap-3 justify-content-end text-nowrap flex-wrap">
-                                    <div>
-                                        <button type="button" class="btn btn-outline-primary" data-toggle="dropdown" aria-expanded="false">
-                                            <i class="tio-download-to"></i>
-                                            Export
-                                            <i class="tio-chevron-down"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-right">
-                                            <li>
-                                                <a type="submit" class="dropdown-item d-flex align-items-center gap-2" href="{{route('admin.product.excel-import', ['search' => $search])}}">
-                                                    <img width="14" src="{{asset('assets/admin/img/icons/excel.png')}}" alt="">
-                                                    {{translate('Excel')}}
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
                                     <a href="{{route('admin.product.add-new')}}" class="btn btn-primary">
                                         <i class="tio-add"></i> {{translate('add_New_Product')}}
                                     </a>

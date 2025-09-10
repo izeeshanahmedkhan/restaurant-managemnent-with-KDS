@@ -42,7 +42,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
     Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout')->middleware('admin');
 
     Route::group(['middleware' => ['admin']], function () {
-        Route::get('/fcm/{id}', [DashboardController::class, 'fcm'])->name('dashboard');     //test route
+        Route::get('/fcm/{id}', [DashboardController::class, 'fcm'])->name('fcm');     //test route
         Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::post('order-stats', [DashboardController::class, 'orderStats'])->name('order-stats');
         Route::get('settings', [SystemController::class, 'settings'])->name('settings');
@@ -89,6 +89,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('orders', 'POSController@order_list')->name('orders');
             Route::get('export-excel', 'POSController@export_excel')->name('export-excel');
             Route::get('order-details/{id}', 'POSController@order_details')->name('order-details');
+            Route::post('payment-status-update', 'OrderController@paymentStatus')->name('payment-status-update');
             Route::get('invoice/{id}', 'POSController@generate_invoice');
             Route::any('store-keys', 'POSController@store_keys')->name('store-keys');
             Route::get('clear', 'POSController@clear_session_data')->name('clear');
@@ -155,6 +156,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('increase-preparation-time/{id}', [OrderController::class, 'preparationTime'])->name('increase-preparation-time');
             Route::get('status', [OrderController::class, 'status'])->name('status');
             Route::get('payment-status', [OrderController::class, 'paymentStatus'])->name('payment-status');
+            Route::post('payment-status-update', [OrderController::class, 'paymentStatus'])->name('payment-status-update');
             Route::get('generate-invoice/{id}', [OrderController::class, 'generateInvoice'])->name('generate-invoice')->withoutMiddleware(['module:order_management']);
             Route::post('add-payment-ref-code/{id}', [OrderController::class, 'addPaymentReferenceCode'])->name('add-payment-ref-code');
             Route::get('branch-filter/{branch_id}', [OrderController::class, 'branchFilter'])->name('branch-filter');

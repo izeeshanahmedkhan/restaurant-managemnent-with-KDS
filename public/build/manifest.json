@@ -1,0 +1,24 @@
+{
+  "resources/js/app.js": {
+    "file": "assets/app2.js",
+    "isEntry": true,
+    "src": "resources/js/app.js"
+  },
+  "resources/js/kiosk/main.css": {
+    "file": "assets/main.css",
+    "src": "resources/js/kiosk/main.css"
+  },
+  "resources/js/kiosk/main.jsx": {
+    "css": [
+      "assets/main.css"
+    ],
+    "file": "assets/main.js",
+    "isEntry": true,
+    "src": "resources/js/kiosk/main.jsx"
+  },
+  "resources/sass/app.css": {
+    "file": "assets/app.css",
+    "isEntry": true,
+    "src": "resources/sass/app.css"
+  }
+}

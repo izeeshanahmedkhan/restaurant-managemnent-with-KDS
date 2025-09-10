@@ -135,27 +135,68 @@
                                     <span style="word-break: break-all;"> {{ Str::limit($detail->product['name'], 200) }}</span><br>
                                     @if (count(json_decode($detail['variation'], true)) > 0)
                                         <strong><u>{{ translate('variation') }} : </u></strong>
-                                        @foreach(json_decode($detail['variation'],true) as  $variation)
-                                            @if ( isset($variation['name'])  && isset($variation['values']))
+                                        {{-- DEBUG: Show raw variation data --}}
+                                        <div style="background: yellow; padding: 5px; margin: 5px 0; font-size: 10px;">
+                                            <strong>DEBUG VARIATION DATA:</strong><br>
+                                            Raw JSON: {{ $detail['variation'] }}<br>
+                                            Decoded: {{ json_encode(json_decode($detail['variation'], true)) }}<br>
+                                            Type: {{ gettype(json_decode($detail['variation'], true)) }}<br>
+                                            Count: {{ count(json_decode($detail['variation'], true)) }}
+                                        </div>
+                                        @php($variations = json_decode($detail['variation'], true))
+                                        @foreach($variations as $index => $variation)
+                                            {{-- DEBUG: Show each variation item --}}
+                                            <div style="background: lightblue; padding: 3px; margin: 2px 0; font-size: 9px;">
+                                                DEBUG Item {{ $index }}: {{ json_encode($variation) }}
+                                            </div>
+                                            @if (isset($variation['name']) && isset($variation['values']))
                                                 <span class="d-block text-capitalize">
-                                                    <strong>{{  $variation['name']}} - </strong>
+                                                    <strong>{{ $variation['name'] }} - </strong>
                                                 </span>
-                                                @foreach ($variation['values'] as $value)
+                                                @if (isset($variation['values']['label']) && is_array($variation['values']['label']))
+                                                    {{-- Handle new structure: {name: "Size", values: {label: ["Large"], price: [30.00]}} --}}
+                                                    @php($labels = $variation['values']['label'])
+                                                    @php($prices = $variation['values']['price'] ?? [])
+                                                    @foreach($labels as $index => $label)
+                                                        <span class="d-block text-capitalize">
+                                                            {{ $label }} :
+                                                            <strong>{{\App\CentralLogics\Helpers::set_symbol($prices[$index] ?? 0)}}</strong>
+                                                        </span>
+                                                    @endforeach
+                                                @elseif (is_array($variation['values']))
+                                                    {{-- Handle old structure with array of values --}}
+                                                    @foreach ($variation['values'] as $value)
+                                                        <span class="d-block text-capitalize">
+                                                            {{ $value['label'] ?? $value['name'] ?? 'Option' }} :
+                                                            <strong>{{\App\CentralLogics\Helpers::set_symbol($value['optionPrice'] ?? $value['price'] ?? $value['delta'] ?? 0)}}</strong>
+                                                        </span>
+                                                    @endforeach
+                                                @else
+                                                    {{-- Handle simple key-value structure --}}
                                                     <span class="d-block text-capitalize">
-                                                        {{ $value['label']}} :
-                                                        <strong>{{\App\CentralLogics\Helpers::set_symbol( $value['optionPrice'])}}</strong>
+                                                        {{ $variation['values'] }} :
+                                                        <strong>{{\App\CentralLogics\Helpers::set_symbol(0)}}</strong>
+                                                    </span>
+                                                @endif
+                                            @elseif (isset($variation['name']) && isset($variation['selected_options']))
+                                                {{-- Handle kiosk structure: {name: "Size", selected_options: [{label: "Large", price: 30.00}]} --}}
+                                                <span class="d-block text-capitalize">
+                                                    <strong>{{ $variation['name'] }} - </strong>
+                                                </span>
+                                                @foreach($variation['selected_options'] as $option)
+                                                    <span class="d-block text-capitalize">
+                                                        {{ $option['label'] }} :
+                                                        <strong>{{\App\CentralLogics\Helpers::set_symbol($option['price'] ?? 0)}}</strong>
                                                     </span>
                                                 @endforeach
-                                            @else
-                                                @if (isset(json_decode($detail['variation'],true)[0]))
-                                                    @foreach(json_decode($detail['variation'],true)[0] as $key1 =>$variation)
-                                                        <div class="font-size-sm text-body">
-                                                            <span>{{$key1}} :  </span>
-                                                            <span class="font-weight-bold">{{$variation}}</span>
-                                                        </div>
-                                                    @endforeach
-                                                @endif
-                                                @break
+                                            @elseif (is_array($variation))
+                                                {{-- Handle array structure without name/values --}}
+                                                @foreach($variation as $key => $value)
+                                                    <div class="font-size-sm text-body">
+                                                        <span>{{ $key }} : </span>
+                                                        <span class="font-weight-bold">{{ $value }}</span>
+                                                    </div>
+                                                @endforeach
                                             @endif
                                         @endforeach
                                     @else
@@ -174,17 +215,17 @@
                                         @if($addOnQtys==null)
                                             @php($add_on_qty=1)
                                         @else
-                                            @php($add_on_qty=$addOnQtys[$key2])
+                                            @php($add_on_qty=$addOnQtys[$key2] ?? 1)
                                         @endif
 
                                         <div class="font-size-sm text-body">
                                             <span>{{$addon ? $addon['name'] : translate('addon deleted')}} :  </span>
                                             <span class="font-weight-bold">
-                                                {{$add_on_qty}} x {{ \App\CentralLogics\Helpers::set_symbol($addOnPrices[$key2]) }}
+                                                {{$add_on_qty}} x {{ \App\CentralLogics\Helpers::set_symbol($addOnPrices[$key2] ?? $addon->price ?? 0) }}
                                             </span>
                                         </div>
-                                        @php($addOnsCost+=$addOnPrices[$key2] * $add_on_qty)
-                                        @php($add_ons_tax_cost +=  $addOnTaxes[$key2] * $add_on_qty)
+                                        @php($addOnsCost+=($addOnPrices[$key2] ?? $addon->price ?? 0) * $add_on_qty)
+                                        @php($add_ons_tax_cost +=  ($addOnTaxes[$key2] ?? 0) * $add_on_qty)
                                     @endforeach
 
                                     {{translate('Discount : ')}}{{ \App\CentralLogics\Helpers::set_symbol($detail['discount_on_product']) }}

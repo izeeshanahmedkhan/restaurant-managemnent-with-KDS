@@ -18,9 +18,112 @@
     
     $timeAgo = \Carbon\Carbon::parse($order->created_at)->diffForHumans();
     $orderItems = $order->details ?? collect();
+    
+    // Format order data for modal display
+    $formattedOrder = [
+        'id' => $order->id,
+        'number' => str_pad($order->id, 7, '0', STR_PAD_LEFT),
+        'status' => strtoupper($order->order_status),
+        'placed_at' => $order->created_at->toISOString(),
+        'customer_name' => $order->customer ? $order->customer->f_name . ' ' . $order->customer->l_name : null,
+        'token' => $order->token,
+        'total_amount' => $order->order_amount,
+        'items' => $orderItems->map(function($detail) {
+            $variations = $detail->variation ?? [];
+            $addons = $detail->add_on_ids ?? [];
+            
+            // Parse variations from JSON
+            if (is_string($variations)) {
+                try {
+                    $variations = json_decode($variations, true) ?: [];
+                } catch (\Exception $e) {
+                    $variations = $variations ? [$variations] : [];
+                }
+            } elseif (!is_array($variations)) {
+                $variations = $variations ? [$variations] : [];
+            }
+            
+            // Format variations for display
+            $variationText = '';
+            if (is_array($variations)) {
+                $variationLabels = [];
+                foreach ($variations as $variation) {
+                    if (isset($variation['name']) && isset($variation['values'])) {
+                        $variationName = $variation['name'];
+                        $variationValues = [];
+                        
+                        // Handle the actual structure: values.label is an array of selected values
+                        if (is_array($variation['values']) && isset($variation['values']['label']) && is_array($variation['values']['label'])) {
+                            $variationValues = $variation['values']['label'];
+                        }
+                        // Handle array of value objects with label and optionPrice
+                        elseif (is_array($variation['values'])) {
+                            foreach ($variation['values'] as $value) {
+                                if (isset($value['label'])) {
+                                    $variationValues[] = $value['label'];
+                                }
+                            }
+                        }
+                        
+                        if (!empty($variationValues)) {
+                            $variationLabels[] = $variationName . ': ' . implode(', ', $variationValues);
+                        }
+                    }
+                }
+                $variationText = implode(' | ', $variationLabels);
+            }
+            
+            // Parse addons from JSON
+            if (is_string($addons)) {
+                try {
+                    $addons = json_decode($addons, true) ?: [];
+                } catch (\Exception $e) {
+                    $addons = $addons ? [$addons] : [];
+                }
+            } elseif (!is_array($addons)) {
+                $addons = $addons ? [$addons] : [];
+            }
+            
+            // Get addon details
+            $addonDetails = [];
+            if (!empty($addons)) {
+                $addonQuantities = is_string($detail->add_on_qtys) ? json_decode($detail->add_on_qtys, true) : $detail->add_on_qtys;
+                $addonQuantities = $addonQuantities ?: [];
+                
+                foreach ($addons as $index => $addonId) {
+                    $addon = \App\Model\AddOn::find($addonId);
+                    if ($addon) {
+                        $addonDetails[] = [
+                            'name' => $addon->name,
+                            'quantity' => $addonQuantities[$index] ?? 1,
+                            'price' => $addon->price
+                        ];
+                    }
+                }
+            }
+            
+            // Format addons for display
+            $addonText = '';
+            if (!empty($addonDetails)) {
+                $addonText = implode(', ', array_map(function($addon) {
+                    return $addon['name'] . ($addon['quantity'] > 1 ? ' (x' . $addon['quantity'] . ')' : '');
+                }, $addonDetails));
+            }
+            
+            return [
+                'product_id' => $detail->product_id,
+                'name' => $detail->product->name ?? 'Unknown Item',
+                'quantity' => $detail->quantity,
+                'variations' => $variations,
+                'variation_text' => $variationText,
+                'addons' => $addonDetails,
+                'addon_text' => $addonText
+            ];
+        })->toArray()
+    ];
 @endphp
 
-<div class="kds-card kds-card--clickable" data-order-id="{{ $order->id }}" data-order-data="{{ json_encode($order) }}">
+<div class="kds-card kds-card--clickable" data-order-id="{{ $order->id }}" data-order-data="{{ json_encode($formattedOrder) }}">
     <div class="kds-card__header">
         <h3 class="kds-card__number">#{{ $order->id }}</h3>
         <div class="kds-card__status">
@@ -34,6 +137,36 @@
         @elseif($order->token)
             <div class="kds-card__token">Token: {{ $order->token }}</div>
         @endif
+        
+        {{-- Order Source Indicator --}}
+        <div class="kds-card__source">
+            @php
+                $sourceClass = match($order->order_source ?? 'pos') {
+                    'kiosk' => 'kds-source--kiosk',
+                    'pos' => 'kds-source--pos',
+                    'online' => 'kds-source--online',
+                    default => 'kds-source--pos'
+                };
+                
+                $sourceText = match($order->order_source ?? 'pos') {
+                    'kiosk' => 'KIOSK',
+                    'pos' => 'POS',
+                    'online' => 'ONLINE',
+                    default => 'POS'
+                };
+                
+                $sourceIcon = match($order->order_source ?? 'pos') {
+                    'kiosk' => 'fas fa-desktop',
+                    'pos' => 'fas fa-cash-register',
+                    'online' => 'fas fa-globe',
+                    default => 'fas fa-cash-register'
+                };
+            @endphp
+            <span class="kds-source {{ $sourceClass }}">
+                <i class="{{ $sourceIcon }}"></i>
+                {{ $sourceText }}
+            </span>
+        </div>
         
         <div class="kds-card__time">
             <i class="fas fa-clock"></i>
@@ -49,6 +182,7 @@
                     <span class="kds-card__item-name">{{ $item->product->name ?? $item->product_name ?? 'Unknown Item' }}</span>
                     
                     @php
+                        
                         // Parse variations for display
                         $variations = $item->variation ?? [];
                         $variationText = '';
@@ -58,15 +192,29 @@
                                 if (is_array($variationData)) {
                                     $variationLabels = [];
                                     foreach ($variationData as $variation) {
-                                        if (isset($variation['values']) && is_array($variation['values'])) {
-                                            foreach ($variation['values'] as $value) {
-                                                if (isset($value['label'])) {
-                                                    $variationLabels[] = $value['label'];
+                                        if (isset($variation['name']) && isset($variation['values'])) {
+                                            $variationName = $variation['name'];
+                                            $variationValues = [];
+                                            
+                                            // Handle the actual structure: values.label is an array of selected values
+                                            if (is_array($variation['values']) && isset($variation['values']['label']) && is_array($variation['values']['label'])) {
+                                                $variationValues = $variation['values']['label'];
+                                            }
+                                            // Handle array of value objects with label and optionPrice
+                                            elseif (is_array($variation['values'])) {
+                                                foreach ($variation['values'] as $value) {
+                                                    if (isset($value['label'])) {
+                                                        $variationValues[] = $value['label'];
+                                                    }
                                                 }
+                                            }
+                                            
+                                            if (!empty($variationValues)) {
+                                                $variationLabels[] = $variationName . ': ' . implode(', ', $variationValues);
                                             }
                                         }
                                     }
-                                    $variationText = implode(', ', $variationLabels);
+                                    $variationText = implode(' | ', $variationLabels);
                                 }
                             } catch (\Exception $e) {
                                 $variationText = '';

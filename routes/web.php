@@ -11,9 +11,29 @@ use Illuminate\Support\Facades\View;
 use Mpdf\Mpdf;
 
 /**
+ * Asset route for development server
+ * This handles /assets/* requests when using php artisan serve
+ */
+Route::get('assets/{path}', function ($path) {
+    $filePath = public_path("assets/{$path}");
+    
+    if (file_exists($filePath)) {
+        $mimeType = mime_content_type($filePath);
+        return response()->file($filePath, ['Content-Type' => $mimeType]);
+    }
+    
+    abort(404);
+})->where('path', '.*');
+
+/**
  * Homepage with login options
  */
 Route::get('/', [HomeController::class, 'homepage'])->name('homepage');
+
+// Add kiosk route
+Route::get('/kiosk', function () {
+    return view('kiosk.index');
+})->name('kiosk');
 
 Route::get('/image-proxy', function () {
     $url = request('url');

@@ -19,7 +19,6 @@ Route::group(['namespace' => 'Chef', 'as' => 'chef.', 'middleware' => 'maintenan
     Route::group(['middleware' => ['chef']], function () {
         // Dashboard (KDS) - Root chef route
         Route::get('/', [KDSController::class, 'dashboard'])->name('dashboard');
-        Route::get('dashboard', [KDSController::class, 'dashboard'])->name('dashboard');
 
         // KDS Routes
         Route::group(['prefix' => 'kds', 'as' => 'kds.'], function () {

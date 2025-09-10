@@ -1987,3 +1987,38 @@ body.fullscreen .kds-dish-modal__content {
     font-size: var(--font-size-xl);
   }
 }
+
+/* Order Source Indicators */
+.kds-source {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.kds-source--kiosk {
+  background-color: #E0F2FE;
+  color: #0277BD;
+  border: 1px solid #B3E5FC;
+}
+
+.kds-source--pos {
+  background-color: #F3E5F5;
+  color: #7B1FA2;
+  border: 1px solid #E1BEE7;
+}
+
+.kds-source--online {
+  background-color: #E8F5E8;
+  color: #2E7D32;
+  border: 1px solid #C8E6C9;
+}
+
+.kds-source i {
+  font-size: 0.75em;
+}

@@ -86,5 +86,7 @@ class Kernel extends HttpKernel
         'branch_status' => BranchStatusCheck::class,
         'branch_adder' => BranchAdder::class,
         'maintenance_mode' => MaintenanceModeMiddleware::class,
+        'kiosk.auth' => \App\Http\Middleware\KioskAuth::class,
+        'kiosk.branch.filter' => \App\Http\Middleware\KioskBranchFilter::class,
     ];
 }

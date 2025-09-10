@@ -77,6 +77,21 @@ class Order extends Model
         return $query->where('order_type', '!=', 'pos');
     }
 
+    public function kiosk(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Kiosk::class, 'kiosk_id');
+    }
+
+    public function kioskUser(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\KioskUser::class, 'kiosk_user_id');
+    }
+
+    public function scopeKiosk($query)
+    {
+        return $query->where('order_source', '=', 'kiosk');
+    }
+
     public function scopeSchedule($query)
     {
         return $query->whereDate('delivery_date', '>', \Carbon\Carbon::now()->format('Y-m-d'));

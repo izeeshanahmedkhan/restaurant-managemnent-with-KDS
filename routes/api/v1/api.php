@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\GuestUserController;
 use App\Http\Controllers\Api\V1\KitchenController;
 use App\Http\Controllers\Api\V1\MapApiController;
+use App\Http\Controllers\Api\V1\KioskController;
 // Notification and OfflinePayment functionality removed
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PageController;
@@ -22,6 +23,42 @@ use App\Http\Controllers\Api\V1\WishlistController;
 Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function () {
 
     Route::post('fcm-subscribe-to-topic', [CustomerController::class, 'fcmSubscribeToTopic']);
+
+    // Kiosk API routes
+    Route::group(['prefix' => 'kiosk'], function () {
+        // Authentication routes (no middleware)
+        Route::post('auth/login', [KioskController::class, 'login']);
+        
+        // Protected routes (require authentication)
+        Route::group(['middleware' => ['kiosk.auth', 'kiosk.branch.filter']], function () {
+            Route::post('auth/logout', [KioskController::class, 'logout']);
+            Route::get('auth/me', [KioskController::class, 'me']);
+            Route::get('branch', [KioskController::class, 'branch']);
+            Route::get('settings', [KioskController::class, 'settings']);
+            
+            // Menu & Products
+            Route::get('categories', [KioskController::class, 'getCategories']);
+            Route::get('products', [KioskController::class, 'getProducts']);
+            Route::get('products/search', [KioskController::class, 'searchProducts']);
+            Route::get('products/{id}', [KioskController::class, 'getProduct']);
+            Route::get('addons', [KioskController::class, 'getAddons']);
+            Route::get('attributes', [KioskController::class, 'getAttributes']);
+            
+            // Cart Management
+            Route::get('cart', [KioskController::class, 'getCart']);
+            Route::post('cart/add', [KioskController::class, 'addToCart']);
+            Route::put('cart/update', [KioskController::class, 'updateCart']);
+            Route::delete('cart/remove', [KioskController::class, 'removeFromCart']);
+            Route::delete('cart/clear', [KioskController::class, 'clearCart']);
+            Route::post('cart/start-over', [KioskController::class, 'startOver']);
+            
+            // Orders
+            Route::post('orders', [KioskController::class, 'createOrder']);
+            Route::get('orders', [KioskController::class, 'getOrders']);
+            Route::get('orders/{id}', [KioskController::class, 'getOrder']);
+            Route::get('orders/{id}/receipt', [KioskController::class, 'getReceipt']);
+        });
+    });
 
     Route::group(['prefix' => 'auth', 'namespace' => 'Auth'], function () {
         Route::post('registration', [CustomerAuthController::class, 'registration']);
@@ -161,5 +198,27 @@ Route::group(['namespace' => 'Api\V1', 'middleware' => 'localization'], function
         Route::get('products', [BranchController::class, 'products']);
     });
 
+    // Kiosk API Routes
+    Route::group(['prefix' => 'kiosk'], function () {
+        // Authentication routes (no middleware)
+        Route::post('auth/login', [App\Http\Controllers\Api\V1\KioskController::class, 'login']);
+        
+        // Protected routes
+        Route::group(['middleware' => ['kiosk.auth', 'kiosk.branch.filter']], function () {
+            Route::post('auth/logout', [App\Http\Controllers\Api\V1\KioskController::class, 'logout']);
+            Route::get('auth/me', [App\Http\Controllers\Api\V1\KioskController::class, 'me']);
+            Route::get('branch', [App\Http\Controllers\Api\V1\KioskController::class, 'branch']);
+            Route::get('settings', [App\Http\Controllers\Api\V1\KioskController::class, 'settings']);
+            Route::get('categories', [App\Http\Controllers\Api\V1\KioskController::class, 'getCategories']);
+            Route::get('products', [App\Http\Controllers\Api\V1\KioskController::class, 'getProducts']);
+            Route::get('products/{id}', [App\Http\Controllers\Api\V1\KioskController::class, 'getProduct']);
+            Route::get('products/search', [App\Http\Controllers\Api\V1\KioskController::class, 'searchProducts']);
+            Route::get('addons', [App\Http\Controllers\Api\V1\KioskController::class, 'getAddons']);
+            Route::get('attributes', [App\Http\Controllers\Api\V1\KioskController::class, 'getAttributes']);
+            
+            Route::get('orders/{id}', [App\Http\Controllers\Api\V1\KioskController::class, 'getOrder']);
+            Route::get('orders/{id}/receipt', [App\Http\Controllers\Api\V1\KioskController::class, 'getReceipt']);
+        });
+    });
 
 });

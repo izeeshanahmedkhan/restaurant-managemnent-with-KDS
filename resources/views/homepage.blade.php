@@ -139,6 +139,11 @@
             color: white;
         }
         
+        .login-btn-kiosk {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        
         .login-btn i {
             font-size: 1.5rem;
             margin-right: 15px;
@@ -226,6 +231,11 @@
                         <h4>Analytics</h4>
                         <p>Business insights & reports</p>
                     </div>
+                    <div class="feature-item">
+                        <i class="tio-shopping-cart"></i>
+                        <h4>Kiosk System</h4>
+                        <p>Self-service ordering</p>
+                    </div>
                 </div>
             </div>
             
@@ -257,6 +267,14 @@
                             <div>
                                 <div>Chef Login</div>
                                 <small>Kitchen Operations</small>
+                            </div>
+                        </a>
+                        
+                        <a href="{{ route('kiosk') }}" class="login-btn login-btn-kiosk">
+                            <i class="tio-shopping-cart"></i>
+                            <div>
+                                <div>Kiosk</div>
+                                <small>Self-Service Ordering</small>
                             </div>
                         </a>
                     </div>

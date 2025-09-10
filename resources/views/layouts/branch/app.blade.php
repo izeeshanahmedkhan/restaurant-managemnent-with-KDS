@@ -77,7 +77,9 @@
 <script src="{{asset('assets/admin')}}/js/theme.min.js"></script>
 <script src="{{asset('assets/admin')}}/js/sweet_alert.js"></script>
 <script src="{{asset('assets/admin')}}/js/toastr.js"></script>
-<script src="{{asset('assets/admin/js/firebase.min.js')}}"></script>
+<!-- Firebase SDK v10 Compat (Production Build) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
 
 {!! Toastr::message() !!}
 

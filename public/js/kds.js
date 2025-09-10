@@ -974,12 +974,6 @@
                             <div class="kds-modal-order__meta-value">${order.token}</div>
                         </div>
                     ` : ''}
-                    ${order.total_amount ? `
-                        <div class="kds-modal-order__meta-item">
-                            <div class="kds-modal-order__meta-label">Total Amount</div>
-                            <div class="kds-modal-order__meta-value">$${order.total_amount}</div>
-                        </div>
-                    ` : ''}
                 </div>
                 
                 <div class="kds-modal-order__items">
